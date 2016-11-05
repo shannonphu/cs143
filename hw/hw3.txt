@@ -1,0 +1,38 @@
+1.
+	a. CHECK(weight < 5)
+	b. 	CREATE TRIGGER weightTooLarge
+		AFTER INSERT ON Laptop
+		REFERENCING NEW ROW AS r 
+		FOR EACH ROW WHEN r.weight > 5
+		BEGIN
+			UPDATE Laptop
+			SET weight = NULL
+			WHERE model=r.model
+		END
+
+2.	(A, B)
+	(1, 8)
+	(100, 0)
+	(100, 0)
+
+3.	
+	a. 	CREATE VIEW EmployeeNames AS
+		SELECT ename FROM Employees;
+
+		CREATE VIEW DeptInfo AS
+		SELECT dept, AVG(salary)
+		FROM Employees
+		GROUP BY dept;
+	b.	GRANT DELETE ON Employees to 'Mike'
+		GRANT SELECT ON EmployeeNames to 'Mike'
+		GRANT SELECT ON DeptInfo to 'Mike'
+	c. Yes he can delete all employees besides 1 to find the salary of that 1 employee.
+	d. 	UPDATE DeptInfo
+		SET avgsalary=10000
+		This updates the average salary but cannot cascade back to the original table because the employees of that department are affected in unknown ways.
+	e. 	GRANT SELECT, UPDATE ON Employees to 'Joe'
+		Yes Joe can read the DeptInfo data.
+	f. 	REVOKE SELECT
+		ON Employees
+		FROM 'Joe'
+		CASCADE

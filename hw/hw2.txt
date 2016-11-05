@@ -1,0 +1,118 @@
+1.
+	a. 	SELECT company-name
+		FROM Work
+		WHERE company-name not in
+			(SELECT company-name
+			FROM Work
+			WHERE salary < 100,000)
+
+	b.	project_company-name(Work) - project_company-name(select_salary < 100,000(Work))
+	c. 	They are the same in that I am taking the complement to find the answer.
+
+2.
+	a. 	
+	-- This gets every employee's total salary
+	A = SELECT person-name, city, SUM(salary)
+		FROM Employee e, Work w
+		WHERE e.person-name = w.person-name
+		GROUP BY e.person-name
+
+	SELECT person-name
+	FROM A
+	WHERE salary > ALL (SELECT salary
+						FROM A
+						WHERE city = 'Los Angeles'
+					   )
+
+	SELECT person-name
+	FROM A
+	WHERE salary > (SELECT MAX(salary)
+					FROM A
+					WHERE city = 'Los Angeles'
+				   )
+
+	b.
+	SELECT DISTINCT a2.person-name
+	FROM A a1, A a2, Manage m
+	WHERE a1.person-name = m.person-name
+		and m.manager-name = a2.person-name
+		and a1.salary < a2.salary
+
+	SELECT a1.person-name
+	FROM Manager m, A a1
+	WHERE m.manager-name = a1.person-name
+		and a1.salary > SOME (SELECT salary
+							  FROM A
+							  WHERE A.name in (
+							  					SELECT person-name
+							  					FROM Manager m2
+							  					WHERE m.manager-name = m2.person-name
+							  				  )
+							  )
+3.
+	a.
+		i. 	(SELECT name
+			FROM MovieStar
+			WHERE gender = 'F')
+			INTERSECT
+			(SELECT name
+			FROM MovieExec
+			WHERE netWorth > 1000000)
+		ii.	SELECT name
+			FROM MovieStar s, MovieExec e
+			WHERE s.name = e.name and s.gender = 'F' and e.netWorth > 1000000
+	b.
+		i.	(SELECT name
+			FROM MovieStar)
+			EXCEPT
+			(SELECT name
+			FROM MovieExec)
+		ii.	SELECT name
+			FROM MovieStar
+			WHERE name not in (SELECT name FROM MovieExec)
+
+4.
+	a.	SELECT AVG(speed)
+		FROM Desktop
+	b.	SELECT AVG(price)
+		FROM Laptop l, ComputerProduct p 
+		WHERE l.model = p.model and l.weight < 2
+	c.	SELECT AVG(price)
+		FROM ComputerProduct p, Desktop d, Laptop l
+		WHERE p.manufacturer = 'Dell' and (p.model = d.model or p.model = l.model)
+	d.	SELECT AVG(price)
+		FROM ComputerProduct p, Laptop l
+		WHERE p.model = l.model
+		GROUP BY speed
+	e.	SELECT manufacturer
+		FROM ComputerProduct p
+		GROUP BY manufacturer
+		HAVING COUNT(model) > 3
+
+5.
+	a.	INSERT INTO ComputerProduct
+		VALUES('HP', 1200, 1000)
+		INSERT INTO Desktop
+		VALUES(1200, 1.2, 256, 80)
+	b.	DELETE FROM Desktop
+		WHERE model in (SELECT model
+						FROM ComputerProduct p
+						WHERE p.manufacturer = 'IBM' and p.price < 1000)
+		DELETE FROM ComputerProduct
+		WHERE manufacturer = 'IBM' and price < 1000
+	c.	UPDATE Laptop
+		SET weight = weight + 1
+		WHERE model in (SELECT manufacturer
+						FROM ComputerProduct p
+						WHERE p.manufacturer = 'Gateway')
+
+
+
+
+
+
+
+
+
+
+

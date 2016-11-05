@@ -1,0 +1,11 @@
+Currently using database 'CS143'.
+
+###DB Schemas:
+Movie(id, title, year, rating, company)
+Actor(id, last, first, sex, dob, dod)
+Director(id, last, first, dob, dod)
+MovieGenre(mid, genre)
+MovieDirector(mid, did)
+MovieActor(mid, aid, role)
+Review(name, time, mid, rating, comment)
+MaxPersonID(id)

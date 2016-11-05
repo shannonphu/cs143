@@ -1,0 +1,10 @@
+SET foreign_key_checks = 0;
+drop table Movie;
+drop table Actor;
+drop table Director;
+drop table MovieGenre;
+drop table MovieDirector;
+drop table MovieActor;
+drop table Review;
+drop table MaxPersonID;
+drop table MaxMovieID;
