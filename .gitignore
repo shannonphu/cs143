@@ -1,2 +1,5 @@
 .DS_Store
 vm-shared/
+p2a/bruinbase/bruinbase
+p2a/bruinbase/*.tbl
+*.dSYM/

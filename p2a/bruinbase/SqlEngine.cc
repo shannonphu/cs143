@@ -7,6 +7,7 @@
  * @date 3/24/2008
  */
 
+#include <stdio.h>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -14,6 +15,8 @@
 #include <fstream>
 #include "Bruinbase.h"
 #include "SqlEngine.h"
+#include "RecordFile.h"
+#include "PageFile.h"
 
 using namespace std;
 
@@ -132,7 +135,24 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 
 RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 {
-  /* your code here */
+  ifstream infile(loadfile);
+
+  RecordFile rf = RecordFile(table + ".tbl", 'w');
+
+  int key;
+  string value;
+  for(string line; getline( infile, line ); )
+  {
+      cout << line << endl;
+  }
+
+
+  // RecordId id = rf.endRid();
+  // rf.append(123, "hello", id);
+  // int i;
+  // string s;
+  // rf.read(id, i, s);
+  // cout << i << " " << s << endl;
 
   return 0;
 }
