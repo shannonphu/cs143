@@ -7,7 +7,6 @@
  * @date 3/24/2008
  */
 
-#include <stdio.h>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -16,7 +15,6 @@
 #include "Bruinbase.h"
 #include "SqlEngine.h"
 #include "RecordFile.h"
-#include "PageFile.h"
 
 using namespace std;
 
@@ -143,16 +141,19 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
   string value;
   for(string line; getline( infile, line ); )
   {
-      cout << line << endl;
+      int key;
+      string value;
+      parseLoadLine(line, key, value);
+
+      RecordId id = rf.endRid();
+      rf.append(key, value, id);
+
+      // Prints out stored results
+      int i;
+      string s;
+      rf.read(id, i, s);
+      cout << "key: " << i << " | " << "value: " << s << endl;
   }
-
-
-  // RecordId id = rf.endRid();
-  // rf.append(123, "hello", id);
-  // int i;
-  // string s;
-  // rf.read(id, i, s);
-  // cout << i << " " << s << endl;
 
   return 0;
 }
