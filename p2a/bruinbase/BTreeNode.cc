@@ -1,6 +1,16 @@
 #include "BTreeNode.h"
-
+#include <iostream>
 using namespace std;
+
+// int pairSize = sizeof(int) + sizeof(RecordId);
+// int lastAdress = PageFile::PAGE_SIZE - (sizeof(int) + sizeof(RecordId)) - sizeof(PageId);
+
+// Init node with -1's and set number of keys to 0
+BTLeafNode::BTLeafNode()
+{
+	numKeys = 0;
+	memset(buffer, 0, PageFile::PAGE_SIZE);
+}
 
 /*
  * Read the content of the node from the page pid in the PageFile pf.
@@ -9,7 +19,16 @@ using namespace std;
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTLeafNode::read(PageId pid, const PageFile& pf)
-{ return 0; }
+{ 
+	int res = pf.read(pid, buffer);
+	char k[sizeof(int)];
+	memcpy(k, buffer, sizeof(int));
+	// char recordID[sizeof(RecordId)];
+	// memcpy(recordID, buffer + sizeof(RecordId), sizeof(RecordId));
+	int *kk = (int *)k;
+	cout << "read: " << *kk << endl;
+	return res;
+}
     
 /*
  * Write the content of the node to the page pid in the PageFile pf.
@@ -18,14 +37,18 @@ RC BTLeafNode::read(PageId pid, const PageFile& pf)
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTLeafNode::write(PageId pid, PageFile& pf)
-{ return 0; }
+{ 
+	return pf.write(pid, buffer);
+}
 
 /*
  * Return the number of keys stored in the node.
  * @return the number of keys in the node
  */
 int BTLeafNode::getKeyCount()
-{ return 0; }
+{
+	return numKeys; 
+}
 
 /*
  * Insert a (key, rid) pair to the node.
@@ -34,7 +57,50 @@ int BTLeafNode::getKeyCount()
  * @return 0 if successful. Return an error code if the node is full.
  */
 RC BTLeafNode::insert(int key, const RecordId& rid)
-{ return 0; }
+{ 
+	int pairSize = sizeof(int) + sizeof(RecordId); // => 12 bytes
+	int keyCount = getKeyCount();
+
+	//Values to insert as new (key, rid) pair
+	// PageId pid = rid.pid;
+	// int sid = rid.sid;
+
+	int indexToInsert;
+	for (indexToInsert = 0; indexToInsert < PageFile::PAGE_SIZE; indexToInsert += pairSize)
+	{
+		int currKey;
+		memcpy(&currKey, buffer + indexToInsert, sizeof(int));
+		if (currKey == 0 || currKey >= key)
+			break;
+	}
+
+	char *temp = (char *)malloc(PageFile::PAGE_SIZE);
+
+	// prefill temp with 0's
+	memset(temp, 0, PageFile::PAGE_SIZE);
+	// copy buffer elements up till what we want to insert
+	memcpy(temp, buffer, indexToInsert);
+	// copy key
+	memcpy(temp + indexToInsert, &key, sizeof(int));
+	// copy rid
+	memcpy(temp + indexToInsert + sizeof(int), &rid, sizeof(RecordId));
+	// copy rest of buffer elements after inserted area
+	memcpy(temp + indexToInsert + pairSize, buffer + indexToInsert, getKeyCount() * pairSize - indexToInsert);
+	// copy temp back over to buffer
+	memcpy(buffer, temp, PageFile::PAGE_SIZE);
+
+	// debug cout
+	// print values read into buffer to check for validity
+	char k[sizeof(int)];
+	memcpy(k, buffer + indexToInsert, sizeof(int));
+	// char recordID[sizeof(RecordId)];
+	// memcpy(recordID, buffer + sizeof(RecordId), sizeof(RecordId));
+	int *kk = (int *)k;
+	cout << "inserted: " << *kk << endl;
+
+	numKeys++;
+	return 0; 
+}
 
 /*
  * Insert the (key, rid) pair to the node
