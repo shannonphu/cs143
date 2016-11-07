@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <string.h>
 #include <iostream>
 #include <fstream>
 #include "Bruinbase.h"
@@ -133,7 +134,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 
 RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 {
-  ifstream infile(loadfile);
+  ifstream infile(loadfile.c_str());
 
   RecordFile rf = RecordFile(table + ".tbl", 'w');
 
