@@ -1,6 +1,8 @@
 #include "BTreeNode.h"
 #include <iostream>
 #include <cmath>
+#include <cstdlib>
+#include <cstring>
 using namespace std;
 
 #define PAIR_SIZE (sizeof(int) + sizeof(RecordId))
