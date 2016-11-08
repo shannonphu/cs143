@@ -10,24 +10,31 @@
 #include "Bruinbase.h"
 #include "SqlEngine.h"
 #include <cstdio>
-
+#include <iostream>
 // for debug running
 #include "BTreeNode.h"
 #include "RecordFile.h"
+
+using namespace std;
 
 int main()
 {
 	BTLeafNode node;
 	RecordId rid;
-	rid.pid = 1;
-	rid.sid = 3;
-	node.insert(5, rid);
+
+	for (int i = 1; i < 6; i++)
+	{
+		rid.pid = i;
+		rid.sid = i;
+		node.insert(i, rid);
+	}
+
 	PageFile pf = PageFile("movie.tbl", 'w');
 	node.write(1, pf);
 	node.read(1, pf);
 
 	// run the SQL engine taking user commands from standard input (console).
-	SqlEngine::run(stdin);
+	// SqlEngine::run(stdin);
 
 	return 0;
 }

@@ -2,8 +2,8 @@
 #include <iostream>
 using namespace std;
 
-// int pairSize = sizeof(int) + sizeof(RecordId);
-// int lastAdress = PageFile::PAGE_SIZE - (sizeof(int) + sizeof(RecordId)) - sizeof(PageId);
+#define PAIR_SIZE (sizeof(int) + sizeof(RecordId))
+#define LAST_ENTRY_ADDR (PageFile::PAGE_SIZE - PAIR_SIZE - sizeof(PageId))
 
 // Init node with -1's and set number of keys to 0
 BTLeafNode::BTLeafNode()
@@ -20,14 +20,16 @@ BTLeafNode::BTLeafNode()
  */
 RC BTLeafNode::read(PageId pid, const PageFile& pf)
 { 
-	int res = pf.read(pid, buffer);
-	char k[sizeof(int)];
-	memcpy(k, buffer, sizeof(int));
-	// char recordID[sizeof(RecordId)];
-	// memcpy(recordID, buffer + sizeof(RecordId), sizeof(RecordId));
-	int *kk = (int *)k;
-	cout << "read: " << *kk << endl;
-	return res;
+	cout << "Form: (key, { rid.pid, rid.sid })" << endl;
+	for (int i = 0; i < getKeyCount(); i++)
+	{
+		int k;
+		RecordId rid;
+		readEntry(i, k, rid);
+		cout << "read: (" << k << ", { " << rid.pid << ", " << rid.sid << " })" << endl;
+	}
+
+	return pf.read(pid, buffer);
 }
     
 /*
@@ -50,6 +52,33 @@ int BTLeafNode::getKeyCount()
 	return numKeys; 
 }
 
+int BTLeafNode::getInsertAddress(int key)
+{
+	int indexToInsert;
+	for (indexToInsert = 0; indexToInsert < LAST_ENTRY_ADDR; indexToInsert += PAIR_SIZE)
+	{
+		int currKey;
+		memcpy(&currKey, buffer + indexToInsert, sizeof(int));
+		if (currKey == 0 || currKey >= key)
+			break;
+	}
+	return indexToInsert;
+}
+
+void BTLeafNode::insertIntoTempBuffer(char *temp, int indexToInsert, int size, int key, const RecordId &rid)
+{
+	// prefill temp with 0's
+	memset(temp, 0, size);
+	// copy buffer elements up till what we want to insert
+	memcpy(temp, buffer, indexToInsert);
+	// copy key
+	memcpy(temp + indexToInsert, &key, sizeof(int));
+	// copy rid
+	memcpy(temp + indexToInsert + sizeof(int), &rid, sizeof(RecordId));
+	// copy rest of buffer elements after inserted area
+	memcpy(temp + indexToInsert + PAIR_SIZE, buffer + indexToInsert, getKeyCount() * PAIR_SIZE - indexToInsert);
+}
+
 /*
  * Insert a (key, rid) pair to the node.
  * @param key[IN] the key to insert
@@ -58,46 +87,20 @@ int BTLeafNode::getKeyCount()
  */
 RC BTLeafNode::insert(int key, const RecordId& rid)
 { 
-	int pairSize = sizeof(int) + sizeof(RecordId); // => 12 bytes
-	int keyCount = getKeyCount();
-
-	//Values to insert as new (key, rid) pair
-	// PageId pid = rid.pid;
-	// int sid = rid.sid;
-
-	int indexToInsert;
-	for (indexToInsert = 0; indexToInsert < PageFile::PAGE_SIZE; indexToInsert += pairSize)
-	{
-		int currKey;
-		memcpy(&currKey, buffer + indexToInsert, sizeof(int));
-		if (currKey == 0 || currKey >= key)
-			break;
-	}
+	int addressToInsert = getInsertAddress(key);
 
 	char *temp = (char *)malloc(PageFile::PAGE_SIZE);
-
-	// prefill temp with 0's
-	memset(temp, 0, PageFile::PAGE_SIZE);
-	// copy buffer elements up till what we want to insert
-	memcpy(temp, buffer, indexToInsert);
-	// copy key
-	memcpy(temp + indexToInsert, &key, sizeof(int));
-	// copy rid
-	memcpy(temp + indexToInsert + sizeof(int), &rid, sizeof(RecordId));
-	// copy rest of buffer elements after inserted area
-	memcpy(temp + indexToInsert + pairSize, buffer + indexToInsert, getKeyCount() * pairSize - indexToInsert);
-	// copy temp back over to buffer
+	insertIntoTempBuffer(temp, addressToInsert, PageFile::PAGE_SIZE, key, rid);
 	memcpy(buffer, temp, PageFile::PAGE_SIZE);
 
 	// debug cout
-	// print values read into buffer to check for validity
-	char k[sizeof(int)];
-	memcpy(k, buffer + indexToInsert, sizeof(int));
-	// char recordID[sizeof(RecordId)];
-	// memcpy(recordID, buffer + sizeof(RecordId), sizeof(RecordId));
-	int *kk = (int *)k;
-	cout << "inserted: " << *kk << endl;
+	int kk;
+	RecordId t_rid;
+	int eid = addressToInsert / PAIR_SIZE;
+	readEntry(eid, kk, t_rid);
+	cout << "inserted: (" << kk << ", { " << t_rid.pid << ", " << t_rid.sid << " })" << endl;
 
+	free(temp);
 	numKeys++;
 	return 0; 
 }
@@ -114,7 +117,17 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
  */
 RC BTLeafNode::insertAndSplit(int key, const RecordId& rid, 
                               BTLeafNode& sibling, int& siblingKey)
-{ return 0; }
+{ 
+	int addressToInsert = getInsertAddress(key);
+
+	int size = PageFile::PAGE_SIZE + PAIR_SIZE;
+	char *temp = (char *)malloc(size);
+	insertIntoTempBuffer(temp, addressToInsert, PageFile::PAGE_SIZE, key, rid);
+	memcpy(buffer, temp, size);
+
+	free(temp);
+	return 0; 
+}
 
 /**
  * If searchKey exists in the node, set eid to the index entry
@@ -128,7 +141,19 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
  * @return 0 if searchKey is found. Otherwise return an error code.
  */
 RC BTLeafNode::locate(int searchKey, int& eid)
-{ return 0; }
+{
+	for (int i = 0; i < getKeyCount(); i++)
+	{
+		int key;
+		memcpy(&key, buffer + i * PAIR_SIZE, sizeof(int));
+		if (key >= searchKey)
+		{
+			eid = i;
+			return 0;
+		}
+	} 
+	return RC_NO_SUCH_RECORD; 
+}
 
 /*
  * Read the (key, rid) pair from the eid entry.
@@ -137,15 +162,24 @@ RC BTLeafNode::locate(int searchKey, int& eid)
  * @param rid[OUT] the RecordId from the entry
  * @return 0 if successful. Return an error code if there is an error.
  */
+// TODO WRONG WHEN DEBUGGING
 RC BTLeafNode::readEntry(int eid, int& key, RecordId& rid)
-{ return 0; }
+{
+	memcpy(&key, buffer + (eid * PAIR_SIZE), sizeof(int));
+	memcpy(&rid, buffer + (eid * PAIR_SIZE) + sizeof(int), sizeof(RecordId));
+	return 0; 
+}
 
 /*
  * Return the pid of the next slibling node.
  * @return the PageId of the next sibling node 
  */
 PageId BTLeafNode::getNextNodePtr()
-{ return 0; }
+{
+	PageId lastId;
+	memcpy(&lastId, buffer + PageFile::PAGE_SIZE - sizeof(PageId), sizeof(PageId)); 
+	return lastId; 
+}
 
 /*
  * Set the pid of the next slibling node.
@@ -153,7 +187,10 @@ PageId BTLeafNode::getNextNodePtr()
  * @return 0 if successful. Return an error code if there is an error.
  */
 RC BTLeafNode::setNextNodePtr(PageId pid)
-{ return 0; }
+{
+	memcpy(buffer + PageFile::PAGE_SIZE - sizeof(PageId), &pid, sizeof(PageId)); 
+	return 0; 
+}
 
 /*
  * Read the content of the node from the page pid in the PageFile pf.

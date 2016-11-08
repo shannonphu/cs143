@@ -106,6 +106,9 @@ class BTLeafNode {
     */
     char buffer[PageFile::PAGE_SIZE];
     int numKeys;
+
+    int getInsertAddress(int key);
+    void insertIntoTempBuffer(char *temp, int indexToInsert, int size, int key, const RecordId &rid);
 }; 
 
 
