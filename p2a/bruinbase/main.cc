@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <iostream>
 // for debug running
+#include <cassert>
 #include "BTreeNode.h"
 #include "RecordFile.h"
 
@@ -22,16 +23,26 @@ int main()
 	BTLeafNode node;
 	RecordId rid;
 
-	for (int i = 84; i >= 0; i--)
+	int count = 84;
+	for (int i = count; i > 0; i--)
 	{
 		rid.pid = i;
 		rid.sid = i;
-		node.insert(i, rid);
+		assert(node.insert(i, rid) == 0);
 	}
+	assert(node.insert(85, rid) == RC_NODE_FULL);
 
 	PageFile pf = PageFile("movie.tbl", 'w');
 	node.write(1, pf);
 	node.read(1, pf);
+
+	assert(node.getKeyCount() == count);
+
+	for (int i = 1; i <= 84; i++)
+	{
+		int index;
+		assert(node.locate(i, index) == 0 && index == i - 1);
+	}
 
 	// run the SQL engine taking user commands from standard input (console).
 	// SqlEngine::run(stdin);
