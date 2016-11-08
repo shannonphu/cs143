@@ -22,7 +22,7 @@ int main()
 	BTLeafNode node;
 	RecordId rid;
 
-	for (int i = 1; i < 6; i++)
+	for (int i = 84; i >= 0; i--)
 	{
 		rid.pid = i;
 		rid.sid = i;

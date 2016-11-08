@@ -1,9 +1,11 @@
 #include "BTreeNode.h"
 #include <iostream>
+#include <cmath>
 using namespace std;
 
 #define PAIR_SIZE (sizeof(int) + sizeof(RecordId))
 #define LAST_ENTRY_ADDR (PageFile::PAGE_SIZE - PAIR_SIZE - sizeof(PageId))
+#define MAX_KEYS (LAST_ENTRY_ADDR / PAIR_SIZE)
 
 // Init node with -1's and set number of keys to 0
 BTLeafNode::BTLeafNode()
@@ -87,6 +89,9 @@ void BTLeafNode::insertIntoTempBuffer(char *temp, int indexToInsert, int size, i
  */
 RC BTLeafNode::insert(int key, const RecordId& rid)
 { 
+	if (getKeyCount() >= MAX_KEYS)
+		return RC_NODE_FULL;
+
 	int addressToInsert = getInsertAddress(key);
 
 	char *temp = (char *)malloc(PageFile::PAGE_SIZE);
@@ -118,14 +123,24 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
 RC BTLeafNode::insertAndSplit(int key, const RecordId& rid, 
                               BTLeafNode& sibling, int& siblingKey)
 { 
-	int addressToInsert = getInsertAddress(key);
+	if (sibling.getKeyCount() != 0 || getKeyCount() < MAX_KEYS)
+		return RC_INVALID_ATTRIBUTE;
+	
+	int leftSideEntries = ceil(getKeyCount() / 2);
+	int midptAddr = leftSideEntries * PAIR_SIZE;
+	int rightSideEntries = getKeyCount() - leftSideEntries;
 
-	int size = PageFile::PAGE_SIZE + PAIR_SIZE;
-	char *temp = (char *)malloc(size);
-	insertIntoTempBuffer(temp, addressToInsert, PageFile::PAGE_SIZE, key, rid);
-	memcpy(buffer, temp, size);
+	memcpy(sibling.buffer, buffer + midptAddr, rightSideEntries * PAIR_SIZE);
+	sibling.setNextNodePtr(getNextNodePtr());
+	
+	memset(buffer + midptAddr, 0, PageFile::PAGE_SIZE - midptAddr - sizeof(PageId));
 
-	free(temp);
+	memcpy(&siblingKey, sibling.buffer, sizeof(int));
+	if (key < siblingKey)
+		insert(key, rid);
+	else
+		sibling.insert(key, rid);
+
 	return 0; 
 }
 
