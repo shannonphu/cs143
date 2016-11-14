@@ -70,7 +70,7 @@ int main()
 
 	PageFile pf2 = PageFile("test_nl.tbl", 'w');
 
-	node_nl.write(1, pf);
+	node_nl.write(2, pf);
 	node_nl.read(2, pf);
 
 	assert(node_nl.getKeyCount() == 128);
