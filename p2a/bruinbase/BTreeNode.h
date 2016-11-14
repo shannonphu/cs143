@@ -99,6 +99,8 @@ class BTLeafNode {
     */
     RC write(PageId pid, PageFile& pf);
 
+    void print();
+
   private:
    /**
     * The main memory buffer for loading the content of the disk page 
@@ -184,6 +186,7 @@ class BTNonLeafNode {
     RC write(PageId pid, PageFile& pf);
 
     void setKeyCount (int val);
+    void print();
   private:
    /**
     * The main memory buffer for loading the content of the disk page 
@@ -194,6 +197,7 @@ class BTNonLeafNode {
 
     int getInsertAddress(int key);
     void insertIntoTempBuffer(char *temp, int indexToInsert, int size, int key, const PageId &pid);
+    RC readEntry(int eid, int& key, PageId &pid);
 }; 
 
 #endif /* BTREENODE_H */
