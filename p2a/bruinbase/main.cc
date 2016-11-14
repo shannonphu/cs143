@@ -49,9 +49,10 @@ int main()
 	int midkey;
 	rid.pid = 222;
 	rid.sid = 444;
-	node_l.insertAndSplit(555, rid, node_l2, midkey);
-	assert(node_l.getKeyCount() == 42);
-	assert(node_l2.getKeyCount() == 43);
+	node_l.insertAndSplit(1, rid, node_l2, midkey);
+	assert(node_l.getKeyCount() == 43);
+	assert(node_l2.getKeyCount() == 42);
+	assert(midkey == 43);
 
 	// cout << "First leaf" << endl;
 	// node_l.print();
@@ -75,15 +76,15 @@ int main()
 	assert(node_nl.getKeyCount() == 128);
 
 	BTNonLeafNode node_nl2;
-	node_nl.insertAndSplit(555, 111, node_nl2, midkey);
+	node_nl.insertAndSplit(63, 999, node_nl2, midkey);
 	assert(node_nl.getKeyCount() == 64);
 	assert(node_nl2.getKeyCount() == 64);
-	cout << midkey << endl;
-	//assert(midkey == 65);
-	cout << "First non-leaf" << endl;
-	node_nl.print();
-	cout << "Second non-leaf" << endl;
-	node_nl2.print();
+	assert(midkey == 64);
+
+	// cout << "First non-leaf" << endl;
+	// node_nl.print();
+	// cout << "Second non-leaf" << endl;
+	// node_nl2.print();
 
 	// run the SQL engine taking user commands from standard input (console).
 	// SqlEngine::run(stdin);
