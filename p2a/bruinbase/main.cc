@@ -21,65 +21,65 @@ using namespace std;
 int main()
 {
 	// Test BTLeafNodes
-	BTLeafNode node_l;
-	RecordId rid;
+	// BTLeafNode node_l;
+	// RecordId rid;
 
-	int count = 84;
-	for (int i = count; i > 0; i--)
-	{
-		rid.pid = i;
-		rid.sid = i;
-		assert(node_l.insert(i, rid) == 0);
-	}
-	assert(node_l.insert(85, rid) == RC_NODE_FULL);
+	// int count = 84;
+	// for (int i = count; i > 0; i--)
+	// {
+	// 	rid.pid = i;
+	// 	rid.sid = i;
+	// 	assert(node_l.insert(i, rid) == 0);
+	// }
+	// assert(node_l.insert(85, rid) == RC_NODE_FULL);
 
-	PageFile pf = PageFile("movie.tbl", 'w');
-	node_l.write(1, pf);
-	node_l.read(1, pf);
+	// PageFile pf = PageFile("movie.tbl", 'w');
+	// node_l.write(1, pf);
+	// node_l.read(1, pf);
 
-	assert(node_l.getKeyCount() == count);
+	// assert(node_l.getKeyCount() == count);
 
-	for (int i = 1; i <= 84; i++)
-	{
-		int index;
-		assert(node_l.locate(i, index) == 0 && index == i - 1);
-	}
+	// for (int i = 1; i <= 84; i++)
+	// {
+	// 	int index;
+	// 	assert(node_l.locate(i, index) == 0 && index == i - 1);
+	// }
 
-	BTLeafNode node_l2;
-	int midkey;
-	rid.pid = 222;
-	rid.sid = 444;
-	node_l.insertAndSplit(1, rid, node_l2, midkey);
-	assert(node_l.getKeyCount() == 43);
-	assert(node_l2.getKeyCount() == 42);
-	assert(midkey == 43);
+	// BTLeafNode node_l2;
+	// int midkey;
+	// rid.pid = 222;
+	// rid.sid = 444;
+	// node_l.insertAndSplit(1, rid, node_l2, midkey);
+	// assert(node_l.getKeyCount() == 43);
+	// assert(node_l2.getKeyCount() == 42);
+	// assert(midkey == 43);
 
-	// cout << "First leaf" << endl;
-	// node_l.print();
-	// cout << "Second leaf" << endl;
-	// node_l2.print();
+	// // cout << "First leaf" << endl;
+	// // node_l.print();
+	// // cout << "Second leaf" << endl;
+	// // node_l2.print();
 
-	// Test BTNonLeafNode
-	BTNonLeafNode node_nl;
-	for (int i = 1; i <= 128; i++)
-	{
-		PageId pid = i;
-		assert(node_nl.insert(i, pid) == 0);
-	}
-	assert(node_nl.insert(128, 0) == RC_NODE_FULL);
+	// // Test BTNonLeafNode
+	// BTNonLeafNode node_nl;
+	// for (int i = 1; i <= 128; i++)
+	// {
+	// 	PageId pid = i;
+	// 	assert(node_nl.insert(i, pid) == 0);
+	// }
+	// assert(node_nl.insert(128, 0) == RC_NODE_FULL);
 
-	PageFile pf2 = PageFile("test_nl.tbl", 'w');
+	// PageFile pf2 = PageFile("test_nl.tbl", 'w');
 
-	node_nl.write(2, pf);
-	node_nl.read(2, pf);
+	// node_nl.write(2, pf);
+	// node_nl.read(2, pf);
 
-	assert(node_nl.getKeyCount() == 128);
+	// assert(node_nl.getKeyCount() == 128);
 
-	BTNonLeafNode node_nl2;
-	node_nl.insertAndSplit(63, 999, node_nl2, midkey);
-	assert(node_nl.getKeyCount() == 64);
-	assert(node_nl2.getKeyCount() == 64);
-	assert(midkey == 64);
+	// BTNonLeafNode node_nl2;
+	// node_nl.insertAndSplit(63, 999, node_nl2, midkey);
+	// assert(node_nl.getKeyCount() == 64);
+	// assert(node_nl2.getKeyCount() == 64);
+	// assert(midkey == 64);
 
 	// cout << "First non-leaf" << endl;
 	// node_nl.print();
@@ -87,7 +87,7 @@ int main()
 	// node_nl2.print();
 
 	// run the SQL engine taking user commands from standard input (console).
-	// SqlEngine::run(stdin);
+	SqlEngine::run(stdin);
 
 	return 0;
 }
