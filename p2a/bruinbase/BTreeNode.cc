@@ -108,11 +108,11 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
 	memcpy(buffer, temp, PageFile::PAGE_SIZE);
 
 	// debug cout
-	// int kk;
-	// RecordId t_rid;
-	// int eid = addressToInsert / PAIR_SIZE;
-	// readEntry(eid, kk, t_rid);
-	// cout << "inserted: (" << kk << ", { " << t_rid.pid << ", " << t_rid.sid << " })" << endl;
+	int kk;
+	RecordId t_rid;
+	int eid = addressToInsert / PAIR_SIZE;
+	readEntry(eid, kk, t_rid);
+	cout << "inserted: (" << kk << ", { " << t_rid.pid << ", " << t_rid.sid << " })" << endl;
 
 	free(temp);
 	numKeys++;

@@ -11,16 +11,17 @@
 #include "SqlEngine.h"
 #include <cstdio>
 #include <iostream>
-// for debug running
 #include <cassert>
 #include "BTreeNode.h"
 #include "RecordFile.h"
+#include "BTreeIndex.h"
 
 using namespace std;
 
 int main()
 {
 	// Test BTLeafNodes
+
 	BTLeafNode node_l;
 	RecordId rid;
 
@@ -60,6 +61,7 @@ int main()
 	// node_l2.print();
 
 	// Test BTNonLeafNode
+
 	BTNonLeafNode node_nl;
 	for (int i = 1; i <= 128; i++)
 	{
@@ -85,6 +87,18 @@ int main()
 	// node_nl.print();
 	// cout << "Second non-leaf" << endl;
 	// node_nl2.print();
+
+	// Test index
+	BTreeIndex index;
+	index.open("btree.tbl", 'w');
+	rid.pid = 5;
+	rid.sid = 6;
+	index.insert(1, rid);
+	index.insert(2, rid);
+	index.insert(3, rid);
+	index.close();
+
+	index.traverse();
 
 	// run the SQL engine taking user commands from standard input (console).
 	// SqlEngine::run(stdin);
