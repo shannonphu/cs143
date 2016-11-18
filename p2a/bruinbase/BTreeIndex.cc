@@ -84,8 +84,10 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 {
 	cout << "inserting " << key << endl;
 	// Initialize root with first leaf
+	cout << "treeheight before checks:" << treeHeight <<endl;
 	if (treeHeight == 0)
 	{
+		cout << "Making new root at key:" << key << endl;
 		BTLeafNode leaf;
 		if (leaf.insert(key, rid) != 0)
 		{
@@ -99,7 +101,7 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 		{
 			return err;
 		}
-		
+		cout << "treeheight after inserting:" << key << " is:" << treeHeight << endl;
 		return 0;
 	}
 
@@ -114,12 +116,14 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 // Recursive insertion helper
 RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHeight, int &movedKey, PageId &movedPid)
 {
+	cout << "Inside insert helper with key:" << key << endl;
 	// Reached leaf level
 	if (currHeight == treeHeight)
 	{
+		cout << "Inserting into current level" << endl;
 		BTLeafNode leaf;
 		leaf.read(currNode, pf);
-
+		cout << "read successful at key:" << key << endl;
 		// Check for successful insertion
 		if (leaf.insert(key, rid) == 0)
 		{

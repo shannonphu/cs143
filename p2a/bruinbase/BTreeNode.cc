@@ -10,6 +10,7 @@ using namespace std;
 #define LAST_ENTRY_ADDR (PageFile::PAGE_SIZE - PAIR_SIZE - sizeof(PageId))
 #define LAST_ENTRY_ADDR_NL (PageFile::PAGE_SIZE - PAIR_SIZE_NL)
 #define MAX_KEYS (LAST_ENTRY_ADDR / PAIR_SIZE)
+// #define MAX_KEYS ((PageFile::PAGE_SIZE - sizeof(PageId))/PAIR_SIZE)
 #define MAX_KEYS_NL (PageFile::PAGE_SIZE / PAIR_SIZE_NL)
 
 // Init node with -1's and set number of keys to 0
@@ -51,6 +52,8 @@ RC BTLeafNode::read(PageId pid, const PageFile& pf)
  */
 RC BTLeafNode::write(PageId pid, PageFile& pf)
 { 
+	cout << "writing " << endl;
+	print();
 	return pf.write(pid, buffer);
 }
 
@@ -60,7 +63,22 @@ RC BTLeafNode::write(PageId pid, PageFile& pf)
  */
 int BTLeafNode::getKeyCount()
 {
-	return numKeys; 
+	//return numKeys; 
+	int count = 0;
+	char* temp = buffer;
+	int i;
+	for (i = 0; i<=1008; i+= PAIR_SIZE){
+		int insideKey;
+		memcpy(&insideKey, temp, sizeof(int));
+		if (insideKey == 0)
+			break;
+
+		count++;
+		temp+= PAIR_SIZE;
+
+	}
+
+	return count;
 }
 
 int BTLeafNode::getInsertAddress(int key)
@@ -73,6 +91,8 @@ int BTLeafNode::getInsertAddress(int key)
 		if (currKey == 0 || currKey >= key)
 			break;
 	}
+	cout << "size of pageid:" << sizeof(RecordId)<<endl;
+	cout << "inserting key:" << key << " with insertAddress:" << indexToInsert << endl;
 	return indexToInsert;
 }
 
@@ -87,7 +107,11 @@ void BTLeafNode::insertIntoTempBuffer(char *temp, int indexToInsert, int size, i
 	// copy rid
 	memcpy(temp + indexToInsert + sizeof(int), &rid, sizeof(RecordId));
 	// copy rest of buffer elements after inserted area
+	cout << "Copy ok up to this point" << endl;
+	int copy = getKeyCount() * PAIR_SIZE - indexToInsert;
+	cout << "bytes copied:" << copy << endl;
 	memcpy(temp + indexToInsert + PAIR_SIZE, buffer + indexToInsert, getKeyCount() * PAIR_SIZE - indexToInsert);
+	cout << "Made it boys" << endl;
 }
 
 /*
@@ -100,7 +124,7 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
 { 
 	if (getKeyCount() >= MAX_KEYS)
 		return RC_NODE_FULL;
-
+	cout << "inserting:" << key << " with " << getKeyCount() << " keys before" << endl;
 	int addressToInsert = getInsertAddress(key);
 
 	char *temp = (char *)malloc(PageFile::PAGE_SIZE);
