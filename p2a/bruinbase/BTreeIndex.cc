@@ -69,9 +69,44 @@ RC BTreeIndex::close()
 // Debug helper
 void BTreeIndex::traverse()
 {
-	BTNonLeafNode root;
-	root.read(rootPid, pf);
-	root.print();
+	if (treeHeight == 1)
+	{
+		cout << "==== Leaf ====" << endl;
+		BTLeafNode root;
+		root.read(rootPid, pf);
+		root.print();
+	}
+	else
+	{
+		cout << "==== Starting from root ====" << endl;
+
+		// BTree root
+		BTNonLeafNode root;
+		root.read(rootPid, pf);
+		root.print();
+
+		// first page id in root
+		int firstPid;
+		memcpy(&firstPid, root.buffer, sizeof(PageId));
+		int key;
+		BTLeafNode firstLeaf;
+		firstLeaf.read(firstPid, pf);
+		cout << "0th key in tree" << endl;
+		firstLeaf.print();
+
+		// rest page ids in root
+		for (int i = 0; i < root.getKeyCount(); i++)
+		{
+			cout << i+1 << "th key in tree" << endl;
+			int key;
+			PageId pid;
+			root.readEntry(i, key, pid);
+
+			BTLeafNode leaf;
+			leaf.read(pid, pf);
+			leaf.print();
+		}
+	}
 }
 
 /*
@@ -82,12 +117,12 @@ void BTreeIndex::traverse()
  */
 RC BTreeIndex::insert(int key, const RecordId& rid)
 {
-	cout << "inserting " << key << endl;
+	//cout << "inserting " << key << endl;
 	// Initialize root with first leaf
-	cout << "treeheight before checks:" << treeHeight <<endl;
+	//cout << "treeheight before checks:" << treeHeight <<endl;
 	if (treeHeight == 0)
 	{
-		cout << "Making new root at key:" << key << endl;
+		//cout << "Making new root at key:" << key << endl;
 		BTLeafNode leaf;
 		if (leaf.insert(key, rid) != 0)
 		{
@@ -96,38 +131,50 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 
 		treeHeight = 1;
 		rootPid = pf.endPid();
+		cout << "first node: " << rootPid << endl;
 		RC err = leaf.write(rootPid, pf);
 		if (err != 0)
 		{
 			return err;
 		}
-		cout << "treeheight after inserting:" << key << " is:" << treeHeight << endl;
+		// cout << "treeheight after inserting:" << key << " is:" << treeHeight << endl;
 		return 0;
 	}
 
-	// Search and insert (not first insertion)
+
 	int movedKey;
 	PageId movedPid;
-	// Call recursive insertion function and if overflow occured
-	insertHelper(key, rid, rootPid, 1, movedKey, movedPid);
+
+	// Call recursive insertion function and if overflow occured then make new root
+	if (insertHelper(key, rid, rootPid, 1, movedKey, movedPid) == RC_NODE_FULL)
+	{
+		BTNonLeafNode newRoot;
+		// Save value of current root and new node due to overflow into the new root
+		newRoot.initializeRoot(rootPid, movedKey, movedPid);
+		treeHeight++;
+		rootPid = pf.endPid();
+		cout << "new root: " << rootPid << endl;
+		newRoot.write(rootPid, pf);
+	}
+
     return 0;
 }
 
 // Recursive insertion helper
 RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHeight, int &movedKey, PageId &movedPid)
 {
-	cout << "Inside insert helper with key:" << key << endl;
+	//cout << "Inside insert helper with key:" << key << endl;
 	// Reached leaf level
 	if (currHeight == treeHeight)
 	{
-		cout << "Inserting into current level" << endl;
+		//cout << "Inserting into current level" << endl;
 		BTLeafNode leaf;
 		leaf.read(currNode, pf);
-		cout << "read successful at key:" << key << endl;
+		//cout << "read successful at key:" << key << endl;
 		// Check for successful insertion
 		if (leaf.insert(key, rid) == 0)
 		{
-			cout << "normal insert" << endl;
+			leaf.write(currNode, pf);
 			return 0;
 		}
 
@@ -137,12 +184,13 @@ RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHei
 		movedPid = pf.endPid();
 
 		// Connect leaf next pointers
-		sibling.setNextNodePtr(leaf.getNextNodePtr());
-		leaf.setNextNodePtr(pf.endPid());
+		// int leafNextNode = leaf.getNextNodePtr();
+		// sibling.setNextNodePtr(leafNextNode);
+		leaf.setNextNodePtr(movedPid);
 
 		// Write leaves back to page file
 		leaf.write(currNode, pf);
-		sibling.write(pf.endPid(), pf);
+		sibling.write(movedPid, pf);
 		return RC_NODE_FULL;
 	}
 
@@ -162,7 +210,7 @@ RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHei
 		// Try to insert into non-leaf node successfully
 		if (nl_node.insert(movedKey, movedPid) == 0)
 		{
-			nl_node.write(childPid, pf);
+			nl_node.write(currNode, pf);
 			return 0;
 		}
 
@@ -175,7 +223,7 @@ RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHei
 		movedPid = pf.endPid();
 
 		nl_node.write(childPid, pf);
-		nl_sibling.write(pf.endPid(), pf);
+		nl_sibling.write(movedPid, pf);
 	}
 
 	return 0;
@@ -215,4 +263,14 @@ RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
 RC BTreeIndex::readForward(IndexCursor& cursor, int& key, RecordId& rid)
 {
     return 0;
+}
+
+PageId BTreeIndex::getRootPid()
+{
+	return rootPid;
+}
+
+int BTreeIndex::getTreeHeight()
+{
+	return treeHeight;
 }

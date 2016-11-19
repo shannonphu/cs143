@@ -186,18 +186,19 @@ class BTNonLeafNode {
     RC write(PageId pid, PageFile& pf);
 
     void setKeyCount (int val);
+    RC readEntry(int eid, int& key, PageId &pid);
     void print();
+    
+    char buffer[PageFile::PAGE_SIZE];
   private:
    /**
     * The main memory buffer for loading the content of the disk page 
     * that contains the node.
     */
-    char buffer[PageFile::PAGE_SIZE];
     int numKeys;
 
     int getInsertAddress(int key);
     void insertIntoTempBuffer(char *temp, int indexToInsert, int size, int key, const PageId &pid);
-    RC readEntry(int eid, int& key, PageId &pid);
 }; 
 
 #endif /* BTREENODE_H */
