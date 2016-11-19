@@ -91,11 +91,13 @@ void BTreeIndex::traverse()
 		int key;
 		BTLeafNode firstLeaf;
 		firstLeaf.read(firstPid, pf);
+		cout << "0th key in tree" << endl;
 		firstLeaf.print();
 
 		// rest page ids in root
 		for (int i = 0; i < root.getKeyCount(); i++)
 		{
+			cout << i+1 << "th key in tree" << endl;
 			int key;
 			PageId pid;
 			root.readEntry(i, key, pid);
@@ -135,7 +137,7 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 		{
 			return err;
 		}
-		//cout << "treeheight after inserting:" << key << " is:" << treeHeight << endl;
+		// cout << "treeheight after inserting:" << key << " is:" << treeHeight << endl;
 		return 0;
 	}
 
@@ -180,10 +182,9 @@ RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHei
 		BTLeafNode sibling;
 		leaf.insertAndSplit(key, rid, sibling, movedKey);
 		movedPid = pf.endPid();
-		cout << "second node: " << movedPid << endl;
 
 		// Connect leaf next pointers
-		int leafNextNode = leaf.getNextNodePtr();
+		// int leafNextNode = leaf.getNextNodePtr();
 		// sibling.setNextNodePtr(leafNextNode);
 		leaf.setNextNodePtr(movedPid);
 
@@ -209,7 +210,7 @@ RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHei
 		// Try to insert into non-leaf node successfully
 		if (nl_node.insert(movedKey, movedPid) == 0)
 		{
-			nl_node.write(childPid, pf);
+			nl_node.write(currNode, pf);
 			return 0;
 		}
 
@@ -222,7 +223,7 @@ RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHei
 		movedPid = pf.endPid();
 
 		nl_node.write(childPid, pf);
-		nl_sibling.write(pf.endPid(), pf);
+		nl_sibling.write(movedPid, pf);
 	}
 
 	return 0;

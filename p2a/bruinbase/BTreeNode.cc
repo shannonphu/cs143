@@ -8,7 +8,7 @@ using namespace std;
 #define PAIR_SIZE (sizeof(int) + sizeof(RecordId))
 #define PAIR_SIZE_NL (sizeof(int) + sizeof(PageId))
 #define LAST_ENTRY_ADDR (PageFile::PAGE_SIZE - PAIR_SIZE - sizeof(PageId))
-#define LAST_ENTRY_ADDR_NL (PageFile::PAGE_SIZE - PAIR_SIZE_NL)
+#define LAST_ENTRY_ADDR_NL (PageFile::PAGE_SIZE - sizeof(PageId))
 #define MAX_KEYS (LAST_ENTRY_ADDR / PAIR_SIZE)
 // #define MAX_KEYS ((PageFile::PAGE_SIZE - sizeof(PageId))/PAIR_SIZE)
 #define MAX_KEYS_NL (PageFile::PAGE_SIZE / PAIR_SIZE_NL)
@@ -140,7 +140,7 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
 	RecordId t_rid;
 	int eid = addressToInsert / PAIR_SIZE;
 	readEntry(eid, kk, t_rid);
-	cout << "inserted: (" << kk << ", { " << t_rid.pid << ", " << t_rid.sid << " })" << endl;
+	// cout << "inserted: (" << kk << ", { " << t_rid.pid << ", " << t_rid.sid << " })" << endl;
 	//print();
 	free(temp);
 	numKeys++;
@@ -300,17 +300,15 @@ RC BTNonLeafNode::write(PageId pid, PageFile& pf)
 int BTNonLeafNode::getKeyCount()
 { 
 	int count = 0;
-	char* temp = buffer;
 	int i;
-	for (i = 0; i<=1016; i+= PAIR_SIZE_NL)
+	for (i = sizeof(PageId); i <= LAST_ENTRY_ADDR_NL; i += PAIR_SIZE_NL)
 	{
 		int insideKey;
-		memcpy(&insideKey, temp + sizeof(PageId), sizeof(int));
+		memcpy(&insideKey, buffer + i, sizeof(int));
 		if (insideKey == 0)
 			break;
 
 		count++;
-		temp += PAIR_SIZE;
 	}
 
 	return count;
@@ -318,13 +316,17 @@ int BTNonLeafNode::getKeyCount()
 
 int BTNonLeafNode::getInsertAddress(int key) 
 {
-	int indexToInsert;
-	for (indexToInsert = 0; indexToInsert < LAST_ENTRY_ADDR_NL; indexToInsert += PAIR_SIZE_NL) {
-		int currKey;
-		memcpy(&currKey, buffer+indexToInsert+sizeof(PageId), sizeof(int));
-		if (currKey ==0 || currKey >= key)
+	int indexToInsert, currKey;
+	for (indexToInsert = sizeof(PageId); indexToInsert <= LAST_ENTRY_ADDR_NL; indexToInsert += PAIR_SIZE_NL) {
+		memcpy(&currKey, buffer + indexToInsert, sizeof(int));
+
+		if (currKey == 0 || currKey >= key)
 			break;
 	}
+	// Insert address is after last entry
+	// if (currKey < key && indexToInsert == LAST_ENTRY_ADDR_NL + PAIR_SIZE_NL)
+	// 	return indexToInsert;
+
 	return indexToInsert;
 }
 
@@ -334,12 +336,13 @@ void BTNonLeafNode::insertIntoTempBuffer(char *temp, int indexToInsert, int size
 	memset(temp, 0, size);
 	// copy buffer elements up till what we want to insert
 	memcpy(temp, buffer, indexToInsert);
-	// copy pid
-	memcpy(temp + indexToInsert, &pid, sizeof(PageId));
 	// copy key
-	memcpy(temp + indexToInsert + sizeof(PageId), &key, sizeof(int));
+	memcpy(temp + indexToInsert, &key, sizeof(int));
+	// copy pid
+	memcpy(temp + indexToInsert + sizeof(int), &pid, sizeof(PageId));
 	// copy rest of buffer elements after inserted area
-	memcpy(temp + indexToInsert + PAIR_SIZE_NL, buffer + indexToInsert, getKeyCount() * PAIR_SIZE_NL - indexToInsert);
+	int remainingSize = PageFile::PAGE_SIZE - indexToInsert - PAIR_SIZE_NL;
+	memcpy(temp + indexToInsert + PAIR_SIZE_NL, buffer + indexToInsert, remainingSize);
 }
 /*
  * Insert a (key, pid) pair to the node.

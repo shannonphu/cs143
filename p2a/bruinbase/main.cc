@@ -93,8 +93,10 @@ int main()
 	index.open("btree.tbl", 'w');
 	rid.pid = 5;
 	rid.sid = 6;
-	for (int i = 1; i < 300; i++)
+	// int num = 127;
+	for (int i = 1; i < 5376; i++)
 		index.insert(i, rid);
+	// index.insert(num, rid);
 
 	index.traverse();
 
