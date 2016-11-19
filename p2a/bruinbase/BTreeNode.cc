@@ -112,6 +112,7 @@ void BTLeafNode::insertIntoTempBuffer(char *temp, int indexToInsert, int size, i
 	cout << "bytes copied:" << copy << endl;
 	memcpy(temp + indexToInsert + PAIR_SIZE, buffer + indexToInsert, getKeyCount() * PAIR_SIZE - indexToInsert);
 	cout << "Made it boys" << endl;
+	print();
 }
 
 /*
@@ -125,7 +126,7 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
 	if (getKeyCount() >= MAX_KEYS)
 		return RC_NODE_FULL;
 	int keyCount = getKeyCount();
-	
+
 	cout << "inserting:" << key << " with " << keyCount << " keys before" << endl;
 	cout << "printing before inserting" << endl;
 	print();
