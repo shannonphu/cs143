@@ -91,14 +91,14 @@ int main()
 	// Test index
 	BTreeIndex index;
 	index.open("btree.tbl", 'w');
-	 rid.pid = 5;
-	 rid.sid = 6;
-	cout << index.insert(1, rid);
-	index.insert(2, rid);
-	index.insert(3, rid);
-	index.close();
+	rid.pid = 5;
+	rid.sid = 6;
+	for (int i = 1; i < 300; i++)
+		index.insert(i, rid);
 
 	index.traverse();
+
+	index.close();
 
 	// run the SQL engine taking user commands from standard input (console).
 	// SqlEngine::run(stdin);
