@@ -65,13 +65,12 @@ int main()
 	// BTNonLeafNode node_nl;
 	// for (int i = 1; i < 128; i++)
 	// {
-	// 	PageId pid = i;
-	// 	assert(node_nl.insert(i, pid) == 0);
+	// 	assert(node_nl.insert(i, 555) == 0);
 	// }
 
 	// BTNonLeafNode node_nl2;
 	// int midkey;
-	// node_nl.insertAndSplit(63, 999, node_nl2, midkey);
+	// node_nl.insertAndSplit(500, 500, node_nl2, midkey);
 
 	// cout << "First non-leaf" << endl;
 	// node_nl.print();
@@ -90,7 +89,6 @@ int main()
 		index.insert(i, rid);
 	index.insert(num, rid);
 	index.traverse();
-	// cout << "size of pid:8" << endl;
 
 	// cout << "testing readForwardNow" << endl;
 	// IndexCursor ic;

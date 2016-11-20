@@ -95,10 +95,30 @@ void BTreeIndex::traverse()
 		{
 			PageId pid;
 			memcpy(&pid, root.buffer + i * 8, sizeof(PageId));
-			cout << "nonleaf " << i << " in page id" << pid << endl;
+			cout << "nonleaf " << i << " in page id " << pid << endl;
 			BTNonLeafNode node;
 			node.read(pid, pf);
 			node.print();
+		}
+
+		cout << "==== There are leaves ====" << endl;
+
+		for (int i = 0; i < root.getKeyCount() + 1; ++i)
+		{
+			PageId pid;
+			memcpy(&pid, root.buffer + i * 8, sizeof(PageId));
+			cout << "nonleaf " << i << " in page id " << pid << endl;
+			BTNonLeafNode node;
+			node.read(pid, pf);
+
+			for (int j = 0; j < node.getKeyCount(); ++j)
+			{
+				memcpy(&pid, node.buffer + j * 8, sizeof(PageId));
+				BTLeafNode nodel;
+				cout << "leaf " << j << " with pid " << pid << endl;
+				nodel.read(pid, pf);
+				nodel.print();
+			}
 		}
 
 		// if only height 2
