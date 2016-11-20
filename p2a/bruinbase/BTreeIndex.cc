@@ -82,7 +82,7 @@ void BTreeIndex::traverse()
 	}
 	else
 	{
-		cout << "==== Starting from root ====" << endl;
+		cout << "==== Starting from root w/ height " << treeHeight << " ====" << endl;
 
 		// BTree root
 		BTNonLeafNode root;
@@ -114,8 +114,8 @@ void BTreeIndex::traverse()
 			for (int j = 0; j < node.getKeyCount(); ++j)
 			{
 				memcpy(&pid, node.buffer + j * 8, sizeof(PageId));
-				BTLeafNode nodel;
-				cout << "leaf " << j << " with pid " << pid << endl;
+				BTNonLeafNode nodel;
+				cout << "lower level nonleaf " << j << " with pid " << pid << endl;
 				nodel.read(pid, pf);
 				nodel.print();
 			}
@@ -317,8 +317,7 @@ RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
 	PageId pid = rootPid;
 
 	// get to the leaf height in order to locate the appropriate node
-	int i = 1;
-	for (i; i < treeHeight; i++ ) {
+	for (int i; i < treeHeight; i++ ) {
 		err = nblnode.read(pid, pf);
 		if (err != 0)
 			return err;
