@@ -8,10 +8,10 @@ using namespace std;
 #define PAIR_SIZE (sizeof(int) + sizeof(RecordId))
 #define PAIR_SIZE_NL (sizeof(int) + sizeof(PageId))
 #define LAST_ENTRY_ADDR (PageFile::PAGE_SIZE - PAIR_SIZE - sizeof(PageId))
-#define LAST_ENTRY_ADDR_NL (PageFile::PAGE_SIZE - sizeof(PageId))
+#define LAST_ENTRY_ADDR_NL (PageFile::PAGE_SIZE - PAIR_SIZE_NL)
 #define MAX_KEYS (LAST_ENTRY_ADDR / PAIR_SIZE)
 // #define MAX_KEYS ((PageFile::PAGE_SIZE - sizeof(PageId))/PAIR_SIZE)
-#define MAX_KEYS_NL (PageFile::PAGE_SIZE / PAIR_SIZE_NL)
+#define MAX_KEYS_NL (PageFile::PAGE_SIZE / PAIR_SIZE_NL - 1)
 
 // Init node with -1's and set number of keys to 0
 BTLeafNode::BTLeafNode()
@@ -391,16 +391,22 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 { 
 	if (getKeyCount() < MAX_KEYS_NL || sibling.getKeyCount() != 0) 
 			return RC_INVALID_ATTRIBUTE;
+	int keyCount = getKeyCount();
 	memset(sibling.buffer, 0, PageFile::PAGE_SIZE);
 
-	int half = ceil(getKeyCount()/2);
+	int half = ceil(keyCount/2);
 	int mid_node_pos = ((half+1) * PAIR_SIZE_NL);
 
 	int last_left;
 	int first_right;
 
+	// original version do not touch!
 	memcpy(&last_left, buffer + mid_node_pos - PAIR_SIZE_NL-8, sizeof(int));
 	memcpy(&first_right, buffer + mid_node_pos-8, sizeof(int));
+
+
+	// memcpy(&last_left, buffer + mid_node_pos - PAIR_SIZE_NL, sizeof(int));
+	// memcpy(&first_right, buffer + mid_node_pos, sizeof(int));
 
 	if (key < last_left) {
 		midKey = last_left;
@@ -412,7 +418,7 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 		// delete everything from mid_node_pos and after
 		memset(buffer + mid_node_pos, 0, PageFile::PAGE_SIZE - mid_node_pos - PAIR_SIZE_NL);
 
-		int sibling_keys = getKeyCount() - half;
+		int sibling_keys = keyCount - half;
 		sibling.setKeyCount(sibling_keys);
 		setKeyCount(half-1);
 
@@ -430,7 +436,7 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 		memset(buffer + mid_node_pos, 0 , PageFile::PAGE_SIZE - mid_node_pos);
 
 		//update keycounts 
-		int sibling_keys = getKeyCount() - half - 1;
+		int sibling_keys = keyCount - half - 1;
 		sibling.setKeyCount(sibling_keys);
 		setKeyCount(half);
 
@@ -449,12 +455,113 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 		// delete from older buffer 
 		memset(buffer + mid_node_pos, 0 , PageFile::PAGE_SIZE);
 
-		int sibling_keys = getKeyCount() - half;
+		int sibling_keys = keyCount - half;
 		sibling.setKeyCount(sibling_keys);
 		setKeyCount(half);
 	}
 	return 0; 
 }
+
+// RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, int& midKey)
+// {
+// 	//Nonleaf nodes have pairs of integer keys and PageIds, with another PageId at the front
+// 	int pairSize = sizeof(PageId) + sizeof(int);
+// 	int numTotalPairs = (PageFile::PAGE_SIZE-sizeof(PageId))/pairSize; //127
+	
+// 	//Only split if inserting will cause an overflow; otherwise, return error
+// 	if(!(getKeyCount() >= numTotalPairs))
+// 		return RC_INVALID_FILE_FORMAT;
+	
+// 	//If sibling node is not empty, return error
+// 	if(sibling.getKeyCount()!=0)
+// 		return RC_INVALID_ATTRIBUTE;
+
+// 	//Clear sibling buffer just in case
+// 	std::fill(sibling.buffer, sibling.buffer + PageFile::PAGE_SIZE, 0); //clear the buffer if necessary
+
+// 	//Calculate keys to remain in the first half
+// 	int numHalfKeys = ((int)((getKeyCount()+1)/2));
+
+// 	//Find the index at which to split the node's buffer
+// 	//For nonleaf nodes only, remember to add an offset of 8 for initial pid
+// 	int halfIndex = numHalfKeys*pairSize + 8;
+	
+// 	//REMOVING THE MEDIAN KEY
+	
+// 	//Find the last key of the first half and the first key of the second half
+// 	int key1 = -1;
+// 	int key2 = -1;
+	
+// 	memcpy(&key1, buffer+halfIndex-8, sizeof(int));
+// 	memcpy(&key2, buffer+halfIndex, sizeof(int));
+	
+// 	if(key < key1) //key1 is the median key to be removed
+// 	{
+// 		//Copy everything on the right side of halfIndex into sibling's buffer (ignore the pid)
+// 		//For nonleaf nodes only, remember to add an offset of 8 for initial pid
+// 		memcpy(sibling.buffer+8, buffer+halfIndex, PageFile::PAGE_SIZE-halfIndex);
+// 		//Update sibling's number of keys
+// 		sibling.numKeys = getKeyCount() - numHalfKeys;
+		
+// 		//Copy down the median key before getting rid of it in buffer
+// 		memcpy(&midKey, buffer+halfIndex-8, sizeof(int));
+		
+// 		//Also set the sibling pid from buffer before getting rid of it
+// 		memcpy(sibling.buffer, buffer+halfIndex-4, sizeof(PageId));
+		
+// 		//Clear the second half of current buffer; update number of keys
+// 		//Also clear the last key of the first half, since this is the median key
+// 		std::fill(buffer+halfIndex-8, buffer + PageFile::PAGE_SIZE, 0); 
+// 		numKeys = numHalfKeys - 1;
+		
+// 		//Insert the (key, pid) pair into buffer, since it's key is smaller than the median
+// 		insert(key, pid);		
+// 	}
+// 	else if(key > key2) //key2 is the median key to be removed
+// 	{
+// 		//Copy everything on the right side of halfIndex EXCEPT FOR THE FIRST KEY into sibling's buffer (ignore the pid)
+// 		//The first key on the right side here is the median key, which will be removed
+// 		//For nonleaf nodes only, remember to add an offset of 8 for initial pid
+// 		memcpy(sibling.buffer+8, buffer+halfIndex+8, PageFile::PAGE_SIZE-halfIndex-8);
+// 		//Update sibling's number of keys
+// 		sibling.numKeys = getKeyCount() - numHalfKeys - 1;
+		
+// 		//Copy down the median key before getting rid of it in buffer
+// 		memcpy(&midKey, buffer+halfIndex, sizeof(int));
+		
+// 		//Also set the sibling pid from buffer before getting rid of it
+// 		memcpy(sibling.buffer, buffer+halfIndex+4, sizeof(PageId));
+		
+// 		//Clear the second half of current buffer; update number of keys
+// 		std::fill(buffer+halfIndex, buffer + PageFile::PAGE_SIZE, 0); 
+// 		numKeys = numHalfKeys;
+		
+// 		//Insert the (key, pid) pair into sibling, since it's key is larger than the median
+// 		sibling.insert(key, pid);
+		
+// 	}
+// 	else //key is the median key to be removed
+// 	{
+// 		//Copy everything on the right side of halfIndex into sibling's buffer (ignore the pid)
+// 		//For nonleaf nodes only, remember to add an offset of 8 for initial pid
+// 		memcpy(sibling.buffer+8, buffer+halfIndex, PageFile::PAGE_SIZE-halfIndex);
+// 		//Update sibling's number of keys
+// 		sibling.numKeys = getKeyCount() - numHalfKeys;
+		
+// 		//Clear the second half of current buffer; update number of keys
+// 		std::fill(buffer+halfIndex, buffer + PageFile::PAGE_SIZE, 0); 
+// 		numKeys = numHalfKeys;
+		
+// 		//The key we're inserting IS the median key, so we stop the insertion process and return
+// 		midKey = key;
+		
+// 		//Set the sibling pid from the median key parameter
+// 		memcpy(sibling.buffer, &pid, sizeof(PageId));
+// 	}
+
+// 	//If we reach this, then we have somehow split the node and inserted the (key, pid) pair
+// 	return 0;
+// }
 
 /*
  * Given the searchKey, find the child-node pointer to follow and
