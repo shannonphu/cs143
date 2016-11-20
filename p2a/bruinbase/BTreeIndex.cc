@@ -10,8 +10,12 @@
 #include "BTreeIndex.h"
 #include "BTreeNode.h"
 #include <iostream>
+#include <cmath>
 
 using namespace std;
+
+#define PAIR_SIZE_NL (sizeof(int) + sizeof(PageId))
+#define MAX_KEYS_NL floor((PageFile::PAGE_SIZE - sizeof(PageId) - sizeof(int)) / PAIR_SIZE_NL)
 
 /*
  * BTreeIndex constructor
@@ -221,25 +225,48 @@ RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHei
 	// Overflow at the leaf level
 	if (insertHelper(key, rid, childPid, currHeight + 1, movedKey, movedPid) == RC_NODE_FULL)
 	{
-		// Try to insert into non-leaf node successfully
-		if (nl_node.insert(movedKey, movedPid) == 0)
-		{
-			nl_node.write(currNode, pf);
+		RC err;
+		if (nl_node.getKeyCount() < MAX_KEYS_NL) {
+			err = nl_node.insert(movedKey, movedPid);
+			if (err !=0)
+				return err;
+			err = nl_node.write(currNode, pf);
+			if (err != 0)
+				return err;
 			return 0;
 		}
+		//original do not touch!
+		// // Try to insert into non-leaf node successfully
+		// if (nl_node.insert(movedKey, movedPid) == 0)
+		// {
+		// 	nl_node.write(currNode, pf);
+		// 	return 0;
+		// }
 
 		// Deal with overflow in non-leaf node level
 		BTNonLeafNode nl_sibling;
+
+		//Alt version
 		int midKey;
 		nl_node.insertAndSplit(movedKey, movedPid, nl_sibling, midKey);
-
 		movedKey = midKey;
 		movedPid = pf.endPid();
-
-		nl_node.write(childPid, pf);
-		nl_sibling.write(movedPid, pf);
-
+		err = nl_node.write(currNode, pf);
+		if (err != 0)
+			return err;
+		err = nl_sibling.write(movedPid, pf);
 		return RC_NODE_FULL;
+		// original do not touch!
+		// int midKey;
+		// nl_node.insertAndSplit(movedKey, movedPid, nl_sibling, midKey);
+
+		// movedKey = midKey;
+		// movedPid = pf.endPid();
+
+		// nl_node.write(childPid, pf);
+		// nl_sibling.write(movedPid, pf);
+
+		// return RC_NODE_FULL;
 	}
 
 	return 0;
