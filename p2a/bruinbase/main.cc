@@ -94,12 +94,32 @@ int main()
 	rid.pid = 5;
 	rid.sid = 6;
 	// int num = 127;
-	for (int i = 1; i < 5376; i++)
+	for (int i = 1; i < 5376; i++){
+		rid.pid= i;
+		rid.sid = i;
 		index.insert(i, rid);
+	}
 	// index.insert(num, rid);
 
 	index.traverse();
 
+	cout << "testing readForwardNow" << endl;
+	IndexCursor ic;
+	RecordId r_test;
+	int key = 5291;
+	int test_eid = 0;
+	ic.pid = 5;
+	ic.eid = 0;
+	index.locate(key, ic);
+	// index.readForward(ic,key,r_test);
+	cout << "key is now:"<< key << endl;
+	cout << "IndexCursor eid is now:" << ic.eid << endl;
+	index.readForward(ic,key,r_test);
+	cout << "IndexCursor eid is now:" << ic.eid << endl;
+	index.locate(key, ic);
+	cout << "key is now:"<< key << endl;
+	// cout << "rid is:" << r_test.pid << endl;
+	//cout << (int) r_test << endl;
 	index.close();
 
 	// run the SQL engine taking user commands from standard input (console).

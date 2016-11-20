@@ -249,6 +249,35 @@ RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHei
  */
 RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
 {
+	BTNonLeafNode nblnode;
+	RC err;
+	PageId pid = rootPid;
+
+	// get to the leaf height in order to locate the appropriate node
+	int i = 1;
+	for (i; i < treeHeight; i++ ) {
+		err = nblnode.read(pid, pf);
+		if (err != 0)
+			return err;
+
+		err = nblnode.locateChildPtr(searchKey, pid);
+		if (err != 0)
+			return err;
+	}
+
+	BTLeafNode blnode;
+
+	err = blnode.read(pid, pf);
+	if (err != 0)
+		return err;
+
+	int eid;
+	err = blnode.locate(searchKey, eid);
+
+	cursor.eid = eid;
+	cursor.pid = pid;
+
+
     return 0;
 }
 
