@@ -125,17 +125,10 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
 	if (getKeyCount() >= MAX_KEYS)
 		return RC_NODE_FULL;
 	int keyCount = getKeyCount();
-<<<<<<< HEAD
-
-	cout << "inserting:" << key << " with " << keyCount << " keys before" << endl;
-	cout << "printing before inserting" << endl;
-	print();
-=======
 	
 	//cout << "inserting:" << key << " with " << keyCount << " keys before" << endl;
 	//cout << "printing before inserting" << endl;
 	//print();
->>>>>>> 80149535947bf57d9090d954bdb3a392f4bc8c83
 	int addressToInsert = getInsertAddress(key);
 
 	char *temp = (char *)malloc(PageFile::PAGE_SIZE);
