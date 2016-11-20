@@ -10,8 +10,12 @@
 #include "BTreeIndex.h"
 #include "BTreeNode.h"
 #include <iostream>
+#include <cmath>
 
 using namespace std;
+
+#define PAIR_SIZE_NL (sizeof(int) + sizeof(PageId))
+#define MAX_KEYS_NL floor((PageFile::PAGE_SIZE - sizeof(PageId) - sizeof(int)) / PAIR_SIZE_NL)
 
 /*
  * BTreeIndex constructor
@@ -85,51 +89,60 @@ void BTreeIndex::traverse()
 		root.read(rootPid, pf);
 		root.print();
 
-		cout << "==== Starting from non-leafs treeHeight=2 ====" << endl;
+		cout << "==== There are non-leaves ====" << endl;
 
 		for (int i = 0; i < root.getKeyCount() + 1; ++i)
 		{
-			cout << "leaf " << i << endl;
 			PageId pid;
 			memcpy(&pid, root.buffer + i * 8, sizeof(PageId));
+			cout << "nonleaf " << i << " in page id " << pid << endl;
 			BTNonLeafNode node;
 			node.read(pid, pf);
 			node.print();
 		}
 
-		// first page id in root
+		cout << "==== There are leaves ====" << endl;
+
+		for (int i = 0; i < root.getKeyCount() + 1; ++i)
+		{
+			PageId pid;
+			memcpy(&pid, root.buffer + i * 8, sizeof(PageId));
+			cout << "nonleaf " << i << " in page id " << pid << endl;
+			BTNonLeafNode node;
+			node.read(pid, pf);
+
+			for (int j = 0; j < node.getKeyCount(); ++j)
+			{
+				memcpy(&pid, node.buffer + j * 8, sizeof(PageId));
+				BTLeafNode nodel;
+				cout << "leaf " << j << " with pid " << pid << endl;
+				nodel.read(pid, pf);
+				nodel.print();
+			}
+		}
+
+		// if only height 2
 		// int firstPid;
 		// memcpy(&firstPid, root.buffer, sizeof(PageId));
 		// int key;
-		// BTNonLeafNode firstNonLeaf;
+		// BTLeafNode firstNonLeaf;
 		// firstNonLeaf.read(firstPid, pf);
 		// cout << "0th non-leaf in tree" << endl;
-		// for (int i = 0; i < firstNonLeaf.getKeyCount; ++i)
-		// {
-		// 	int key;
-		// 	PageId pid;
-		// 	firstNonLeaf.readEntry(i, key, pid);
-
-		// 	BTLeafNode node;
-		// 	node.read(pid, pf);
-		// 	node.print();
-		// }
-
-		// // firstNonLeaf.print();
+		// firstNonLeaf.print();
 
 		// // rest page ids in 2nd level non-leaf nodes
 		// for (int i = 0; i < root.getKeyCount(); i++)
 		// {
-		// 	cout << i+1 << "th non-leaf in tree" << endl;
+		// 	cout << i+1 << "th leaf in tree in page id " << pid << endl;
 		// 	int key;
 		// 	PageId pid;
 		// 	root.readEntry(i, key, pid);
 
-		// 	BTNonLeafNode node;
+		// 	BTLeafNode node;
 		// 	node.read(pid, pf);
 
 
-		// 	// node.print();
+		// 	node.print();
 		// }
 	}
 }
@@ -232,25 +245,48 @@ RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHei
 	// Overflow at the leaf level
 	if (insertHelper(key, rid, childPid, currHeight + 1, movedKey, movedPid) == RC_NODE_FULL)
 	{
-		// Try to insert into non-leaf node successfully
-		if (nl_node.insert(movedKey, movedPid) == 0)
-		{
-			nl_node.write(currNode, pf);
+		RC err;
+		if (nl_node.getKeyCount() < MAX_KEYS_NL) {
+			err = nl_node.insert(movedKey, movedPid);
+			if (err !=0)
+				return err;
+			err = nl_node.write(currNode, pf);
+			if (err != 0)
+				return err;
 			return 0;
 		}
+		//original do not touch!
+		// // Try to insert into non-leaf node successfully
+		// if (nl_node.insert(movedKey, movedPid) == 0)
+		// {
+		// 	nl_node.write(currNode, pf);
+		// 	return 0;
+		// }
 
 		// Deal with overflow in non-leaf node level
 		BTNonLeafNode nl_sibling;
+
+		//Alt version
 		int midKey;
 		nl_node.insertAndSplit(movedKey, movedPid, nl_sibling, midKey);
-
 		movedKey = midKey;
 		movedPid = pf.endPid();
-
-		nl_node.write(childPid, pf);
-		nl_sibling.write(movedPid, pf);
-
+		err = nl_node.write(currNode, pf);
+		if (err != 0)
+			return err;
+		err = nl_sibling.write(movedPid, pf);
 		return RC_NODE_FULL;
+		// original do not touch!
+		// int midKey;
+		// nl_node.insertAndSplit(movedKey, movedPid, nl_sibling, midKey);
+
+		// movedKey = midKey;
+		// movedPid = pf.endPid();
+
+		// nl_node.write(childPid, pf);
+		// nl_sibling.write(movedPid, pf);
+
+		// return RC_NODE_FULL;
 	}
 
 	return 0;

@@ -342,6 +342,7 @@ void BTNonLeafNode::insertIntoTempBuffer(char *temp, int indexToInsert, int size
 	memcpy(temp + indexToInsert + sizeof(int), &pid, sizeof(PageId));
 	// copy rest of buffer elements after inserted area
 	int remainingSize = PageFile::PAGE_SIZE - indexToInsert - PAIR_SIZE_NL;
+	remainingSize = getKeyCount() * PAIR_SIZE_NL - indexToInsert + 4;
 	memcpy(temp + indexToInsert + PAIR_SIZE_NL, buffer + indexToInsert, remainingSize);
 }
 /*
@@ -394,29 +395,33 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 	int keyCount = getKeyCount();
 	memset(sibling.buffer, 0, PageFile::PAGE_SIZE);
 
-	int half = ceil(keyCount/2);
-	int mid_node_pos = ((half+1) * PAIR_SIZE_NL);
+	// original do not touch!
+	// int half = ceil(keyCount/2);
+	// int mid_node_pos = ((half+1) * PAIR_SIZE_NL);
+
+	int half = ((int) ((keyCount +1) / 2));
+	int mid_node_pos = half * PAIR_SIZE_NL + 4;
 
 	int last_left;
 	int first_right;
 
 	// original version do not touch!
-	memcpy(&last_left, buffer + mid_node_pos - PAIR_SIZE_NL-8, sizeof(int));
-	memcpy(&first_right, buffer + mid_node_pos-8, sizeof(int));
+	// memcpy(&last_left, buffer + mid_node_pos - PAIR_SIZE_NL-8, sizeof(int));
+	// memcpy(&first_right, buffer + mid_node_pos-8, sizeof(int));
 
 
-	// memcpy(&last_left, buffer + mid_node_pos - PAIR_SIZE_NL, sizeof(int));
-	// memcpy(&first_right, buffer + mid_node_pos, sizeof(int));
+	memcpy(&last_left, buffer + mid_node_pos - PAIR_SIZE_NL, sizeof(int));
+	memcpy(&first_right, buffer + mid_node_pos, sizeof(int));
 
 	if (key < last_left) {
 		midKey = last_left;
-
+		//memcpy(&midKey, buffer+mid_node_pos-4, sizeof(int));
 		//copy right side to sibling 
-		memcpy(sibling.buffer + PAIR_SIZE_NL, buffer + mid_node_pos, PageFile::PAGE_SIZE - mid_node_pos);
-		memcpy(sibling.buffer, buffer + mid_node_pos -sizeof(PAIR_SIZE_NL), sizeof(PAIR_SIZE_NL));
+		memcpy(sibling.buffer + 4, buffer + mid_node_pos, PageFile::PAGE_SIZE - mid_node_pos);
+		memcpy(sibling.buffer, buffer + mid_node_pos -sizeof(PageId), sizeof(PageId));
 
 		// delete everything from mid_node_pos and after
-		memset(buffer + mid_node_pos, 0, PageFile::PAGE_SIZE - mid_node_pos - PAIR_SIZE_NL);
+		memset(buffer + mid_node_pos - PAIR_SIZE_NL, 0, PageFile::PAGE_SIZE - mid_node_pos - PAIR_SIZE_NL);
 
 		int sibling_keys = keyCount - half;
 		sibling.setKeyCount(sibling_keys);
@@ -425,12 +430,13 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 		insert(key, pid);
 	}
 	else if (key > first_right) {
-
+		// may still need to fix
 		midKey = first_right;
+		//memcpy(&midKey, buffer+mid_node_pos, sizeof(int));
 
 		//copy right side to sibling 
-		memcpy(sibling.buffer + PAIR_SIZE_NL, buffer + mid_node_pos + PAIR_SIZE_NL, PageFile::PAGE_SIZE - mid_node_pos - PAIR_SIZE_NL );
-		memcpy(sibling.buffer, buffer + mid_node_pos,sizeof(PAIR_SIZE_NL));
+		memcpy(sibling.buffer + sizeof(PageId), buffer + mid_node_pos, PageFile::PAGE_SIZE - mid_node_pos- 4);
+		memcpy(sibling.buffer, buffer + mid_node_pos - 4, sizeof(PageId));
 
 		// delete everything from mid_node_pos and after
 		memset(buffer + mid_node_pos, 0 , PageFile::PAGE_SIZE - mid_node_pos);

@@ -60,33 +60,23 @@ int main()
 	// // cout << "Second leaf" << endl;
 	// // node_l2.print();
 
-	// // Test BTNonLeafNode
+	// Test BTNonLeafNode
 
 	// BTNonLeafNode node_nl;
-	// for (int i = 1; i <= 128; i++)
+	// for (int i = 1; i < 128; i++)
 	// {
-	// 	PageId pid = i;
-	// 	assert(node_nl.insert(i, pid) == 0);
+	// 	assert(node_nl.insert(i, 555) == 0);
 	// }
-	// assert(node_nl.insert(128, 0) == RC_NODE_FULL);
-
-	// PageFile pf2 = PageFile("test_nl.tbl", 'w');
-
-	// node_nl.write(2, pf);
-	// node_nl.read(2, pf);
-
-	// assert(node_nl.getKeyCount() == 128);
 
 	// BTNonLeafNode node_nl2;
-	// node_nl.insertAndSplit(63, 999, node_nl2, midkey);
-	// assert(node_nl.getKeyCount() == 64);
-	// assert(node_nl2.getKeyCount() == 64);
-	// assert(midkey == 64);
+	// int midkey;
+	// node_nl.insertAndSplit(500, 500, node_nl2, midkey);
 
 	// cout << "First non-leaf" << endl;
 	// node_nl.print();
 	// cout << "Second non-leaf" << endl;
 	// node_nl2.print();
+
 
 	// Test index
 	BTreeIndex index;
@@ -99,26 +89,25 @@ int main()
 		index.insert(i, rid);
 	index.insert(num, rid);
 	index.traverse();
-	cout << "size of pid:8" << endl;
 
-	cout << "testing readForwardNow" << endl;
-	IndexCursor ic;
-	RecordId r_test;
-	int key = 5291;
-	int test_eid = 0;
-	ic.pid = 5;
-	ic.eid = 0;
-	index.locate(key, ic);
+	// cout << "testing readForwardNow" << endl;
+	// IndexCursor ic;
+	// RecordId r_test;
+	// int key = 5291;
+	// int test_eid = 0;
+	// ic.pid = 5;
+	// ic.eid = 0;
+	// index.locate(key, ic);
+	// // index.readForward(ic,key,r_test);
+	// cout << "key is now:"<< key << endl;
+	// cout << "IndexCursor eid is now:" << ic.eid << endl;
 	// index.readForward(ic,key,r_test);
-	cout << "key is now:"<< key << endl;
-	cout << "IndexCursor eid is now:" << ic.eid << endl;
-	index.readForward(ic,key,r_test);
-	cout << "IndexCursor eid is now:" << ic.eid << endl;
-	index.locate(key, ic);
-	cout << "key is now:"<< key << endl;
+	// cout << "IndexCursor eid is now:" << ic.eid << endl;
+	// index.locate(key, ic);
+	// cout << "key is now:"<< key << endl;
 	// cout << "rid is:" << r_test.pid << endl;
 	//cout << (int) r_test << endl;
-	index.close();
+	// index.close();
 
 	// run the SQL engine taking user commands from standard input (console).
 	// SqlEngine::run(stdin);
