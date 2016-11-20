@@ -60,33 +60,24 @@ int main()
 	// // cout << "Second leaf" << endl;
 	// // node_l2.print();
 
-	// // Test BTNonLeafNode
+	// Test BTNonLeafNode
 
 	// BTNonLeafNode node_nl;
-	// for (int i = 1; i <= 128; i++)
+	// for (int i = 1; i < 128; i++)
 	// {
 	// 	PageId pid = i;
 	// 	assert(node_nl.insert(i, pid) == 0);
 	// }
-	// assert(node_nl.insert(128, 0) == RC_NODE_FULL);
-
-	// PageFile pf2 = PageFile("test_nl.tbl", 'w');
-
-	// node_nl.write(2, pf);
-	// node_nl.read(2, pf);
-
-	// assert(node_nl.getKeyCount() == 128);
 
 	// BTNonLeafNode node_nl2;
+	// int midkey;
 	// node_nl.insertAndSplit(63, 999, node_nl2, midkey);
-	// assert(node_nl.getKeyCount() == 64);
-	// assert(node_nl2.getKeyCount() == 64);
-	// assert(midkey == 64);
 
 	// cout << "First non-leaf" << endl;
 	// node_nl.print();
 	// cout << "Second non-leaf" << endl;
 	// node_nl2.print();
+
 
 	// Test index
 	BTreeIndex index;
@@ -118,7 +109,7 @@ int main()
 	// cout << "key is now:"<< key << endl;
 	// cout << "rid is:" << r_test.pid << endl;
 	//cout << (int) r_test << endl;
-	index.close();
+	// index.close();
 
 	// run the SQL engine taking user commands from standard input (console).
 	// SqlEngine::run(stdin);

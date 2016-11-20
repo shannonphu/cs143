@@ -85,51 +85,40 @@ void BTreeIndex::traverse()
 		root.read(rootPid, pf);
 		root.print();
 
-		cout << "==== Starting from non-leafs treeHeight=2 ====" << endl;
+		cout << "==== There are non-leaves ====" << endl;
 
 		for (int i = 0; i < root.getKeyCount() + 1; ++i)
 		{
-			cout << "leaf " << i << endl;
 			PageId pid;
 			memcpy(&pid, root.buffer + i * 8, sizeof(PageId));
+			cout << "nonleaf " << i << " in page id" << pid << endl;
 			BTNonLeafNode node;
 			node.read(pid, pf);
 			node.print();
 		}
 
-		// first page id in root
+		// if only height 2
 		// int firstPid;
 		// memcpy(&firstPid, root.buffer, sizeof(PageId));
 		// int key;
-		// BTNonLeafNode firstNonLeaf;
+		// BTLeafNode firstNonLeaf;
 		// firstNonLeaf.read(firstPid, pf);
 		// cout << "0th non-leaf in tree" << endl;
-		// for (int i = 0; i < firstNonLeaf.getKeyCount; ++i)
-		// {
-		// 	int key;
-		// 	PageId pid;
-		// 	firstNonLeaf.readEntry(i, key, pid);
-
-		// 	BTLeafNode node;
-		// 	node.read(pid, pf);
-		// 	node.print();
-		// }
-
-		// // firstNonLeaf.print();
+		// firstNonLeaf.print();
 
 		// // rest page ids in 2nd level non-leaf nodes
 		// for (int i = 0; i < root.getKeyCount(); i++)
 		// {
-		// 	cout << i+1 << "th non-leaf in tree" << endl;
+		// 	cout << i+1 << "th leaf in tree in page id " << pid << endl;
 		// 	int key;
 		// 	PageId pid;
 		// 	root.readEntry(i, key, pid);
 
-		// 	BTNonLeafNode node;
+		// 	BTLeafNode node;
 		// 	node.read(pid, pf);
 
 
-		// 	// node.print();
+		// 	node.print();
 		// }
 	}
 }

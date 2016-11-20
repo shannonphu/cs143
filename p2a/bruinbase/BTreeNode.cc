@@ -436,7 +436,7 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 
 		//copy right side to sibling 
 		memcpy(sibling.buffer + sizeof(PageId), buffer + mid_node_pos + 4, PageFile::PAGE_SIZE - mid_node_pos- 4);
-		memcpy(sibling.buffer, buffer + mid_node_pos + sizeof(PageId) ,sizeof(PageId));
+		memcpy(sibling.buffer, buffer + mid_node_pos, sizeof(PageId));
 
 		// delete everything from mid_node_pos and after
 		memset(buffer + mid_node_pos, 0 , PageFile::PAGE_SIZE - mid_node_pos);
