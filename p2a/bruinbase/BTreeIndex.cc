@@ -85,27 +85,52 @@ void BTreeIndex::traverse()
 		root.read(rootPid, pf);
 		root.print();
 
-		// first page id in root
-		int firstPid;
-		memcpy(&firstPid, root.buffer, sizeof(PageId));
-		int key;
-		BTLeafNode firstLeaf;
-		firstLeaf.read(firstPid, pf);
-		cout << "0th key in tree" << endl;
-		firstLeaf.print();
+		cout << "==== Starting from non-leafs treeHeight=2 ====" << endl;
 
-		// rest page ids in root
-		for (int i = 0; i < root.getKeyCount(); i++)
+		for (int i = 0; i < root.getKeyCount() + 1; ++i)
 		{
-			cout << i+1 << "th key in tree" << endl;
-			int key;
+			cout << "leaf " << i << endl;
 			PageId pid;
-			root.readEntry(i, key, pid);
-
-			BTLeafNode leaf;
-			leaf.read(pid, pf);
-			leaf.print();
+			memcpy(&pid, root.buffer + i * 8, sizeof(PageId));
+			BTNonLeafNode node;
+			node.read(pid, pf);
+			node.print();
 		}
+
+		// first page id in root
+		// int firstPid;
+		// memcpy(&firstPid, root.buffer, sizeof(PageId));
+		// int key;
+		// BTNonLeafNode firstNonLeaf;
+		// firstNonLeaf.read(firstPid, pf);
+		// cout << "0th non-leaf in tree" << endl;
+		// for (int i = 0; i < firstNonLeaf.getKeyCount; ++i)
+		// {
+		// 	int key;
+		// 	PageId pid;
+		// 	firstNonLeaf.readEntry(i, key, pid);
+
+		// 	BTLeafNode node;
+		// 	node.read(pid, pf);
+		// 	node.print();
+		// }
+
+		// // firstNonLeaf.print();
+
+		// // rest page ids in 2nd level non-leaf nodes
+		// for (int i = 0; i < root.getKeyCount(); i++)
+		// {
+		// 	cout << i+1 << "th non-leaf in tree" << endl;
+		// 	int key;
+		// 	PageId pid;
+		// 	root.readEntry(i, key, pid);
+
+		// 	BTNonLeafNode node;
+		// 	node.read(pid, pf);
+
+
+		// 	// node.print();
+		// }
 	}
 }
 
@@ -224,6 +249,8 @@ RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHei
 
 		nl_node.write(childPid, pf);
 		nl_sibling.write(movedPid, pf);
+
+		return RC_NODE_FULL;
 	}
 
 	return 0;

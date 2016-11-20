@@ -22,7 +22,7 @@ int main()
 {
 	// Test BTLeafNodes
 
-	BTLeafNode node_l;
+	// BTLeafNode node_l;
 	RecordId rid;
 
 	// int count = 84;
@@ -93,12 +93,14 @@ int main()
 	index.open("btree.tbl", 'w');
 	rid.pid = 5;
 	rid.sid = 6;
-	// int num = 127;
-	for (int i = 1; i < 5376; i++)
+	int num = 5419;
+	// int num = 180;
+	for (int i = 1; i < num; i++)
 		index.insert(i, rid);
-	// index.insert(num, rid);
+	index.insert(num, rid);
 
 	index.traverse();
+	cout << "size of pid:8" << endl;
 
 	index.close();
 
