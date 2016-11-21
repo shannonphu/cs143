@@ -23,7 +23,7 @@ int main()
 	// Test BTLeafNodes
 
 	// BTLeafNode node_l;
-	RecordId rid;
+	// RecordId rid;
 
 	// int count = 84;
 	// for (int i = count; i > 0; i--)
@@ -79,38 +79,38 @@ int main()
 
 
 	// Test index
-	BTreeIndex index;
-	index.open("btree.tbl", 'w');
-	rid.pid = 5;
-	rid.sid = 6;
-	int num = 5419;
-	// int num = 5419 * 128;
-	for (int i = 1; i < num; i++){
-		rid.pid = i;
-		rid.sid = i;
-		index.insert(i, rid);
-	}
-	index.insert(num, rid);
-	index.traverse();
+	// BTreeIndex index;
+	// index.open("btree.tbl", 'w');
+	// rid.pid = 5;
+	// rid.sid = 6;
+	// int num = 5419;
+	// // int num = 5419 * 128;
+	// for (int i = 1; i < num; i++){
+	// 	rid.pid = i;
+	// 	rid.sid = i;
+	// 	index.insert(i, rid);
+	// }
+	// index.insert(num, rid);
+	// index.traverse();
 
-	cout << "testing readForward" << endl;
-	IndexCursor ic;
-	RecordId r_test;
-	int key = 5291;
-	int test_eid = 0;
-	ic.pid = 5;
-	ic.eid = 0;
-	index.locate(key, ic);
-	index.readForward(ic,key,r_test);
-	cout << "key is now:"<< key << endl;
-	cout << "IndexCursor eid is now:" << ic.eid << endl;
-	index.readForward(ic,key,r_test);
-	cout << "IndexCursor eid is now:" << ic.eid << endl;
+	// cout << "testing readForward" << endl;
+	// IndexCursor ic;
+	// RecordId r_test;
+	// int key = 5291;
+	// int test_eid = 0;
+	// ic.pid = 5;
+	// ic.eid = 0;
 	// index.locate(key, ic);
-	cout << "key is now:"<< key << endl;
-	// cout << "rid is:" << r_test.pid << endl;
-	// cout << (int) r_test << endl;
-	index.close();
+	// index.readForward(ic,key,r_test);
+	// cout << "key is now:"<< key << endl;
+	// cout << "IndexCursor eid is now:" << ic.eid << endl;
+	// index.readForward(ic,key,r_test);
+	// cout << "IndexCursor eid is now:" << ic.eid << endl;
+	// // index.locate(key, ic);
+	// cout << "key is now:"<< key << endl;
+	// // cout << "rid is:" << r_test.pid << endl;
+	// // cout << (int) r_test << endl;
+	// index.close();
 
 	// run the SQL engine taking user commands from standard input (console).
 	// SqlEngine::run(stdin);
