@@ -183,7 +183,6 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
  */
 RC BTLeafNode::locate(int searchKey, int& eid)
 {
-
 	for (int i = 0; i < getKeyCount(); i++)
 	{
 		int key;
@@ -306,11 +305,9 @@ int BTNonLeafNode::getInsertAddress(int key)
 	int indexToInsert, currKey;
 	for (indexToInsert = sizeof(PageId); indexToInsert <= LAST_ENTRY_ADDR_NL; indexToInsert += PAIR_SIZE_NL) {
 		memcpy(&currKey, buffer + indexToInsert, sizeof(int));
-
 		if (currKey == 0 || currKey >= key)
 			break;
 	}
-
 	return indexToInsert;
 }
 
