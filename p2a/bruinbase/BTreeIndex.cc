@@ -315,9 +315,9 @@ RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
 	BTNonLeafNode nblnode;
 	RC err;
 	PageId pid = rootPid;
-	int i = 1;
+
 	// get to the leaf height in order to locate the appropriate node
-	for (i; i < treeHeight; i++ ) {
+	for (int i = 1; i < treeHeight; i++ ) {
 		cout << "Height not there yet" << endl;
 		err = nblnode.read(pid, pf);
 		if (err != 0)
