@@ -197,6 +197,7 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
  */
 RC BTLeafNode::locate(int searchKey, int& eid)
 {
+
 	for (int i = 0; i < getKeyCount(); i++)
 	{
 		int key;
@@ -479,7 +480,6 @@ RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
 { 
 	if (getKeyCount() == 0)
 		return RC_NO_SUCH_RECORD;
-
 	for (int i = sizeof(PageId); i < getKeyCount() * PAIR_SIZE_NL; i += PAIR_SIZE_NL){
 	 	int currKey;
 	 	memcpy(&currKey, buffer + i, sizeof(int));
@@ -492,6 +492,7 @@ RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
 
 	 	// Found position in middle of non-leaf
 	 	if (currKey > searchKey) {
+	 		cout << "Found the key yay:" << searchKey << endl;
 	 		memcpy(&pid, buffer + i - sizeof(PageId), sizeof(PageId));
 	 		return 0;
 	 	}
