@@ -16,6 +16,7 @@
 #include "Bruinbase.h"
 #include "SqlEngine.h"
 #include "RecordFile.h"
+#include "BTreeIndex.h"
 
 using namespace std;
 
@@ -43,10 +44,10 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
   BTreeIndex btree;
   IndexCursor ic;
 
-  RC     err;
+  RC     rc;
   int    key;     
   string value;
-  int    count;
+  int    count = 0;
   int    diff;
 
   // open the table file
@@ -63,15 +64,18 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
   int eq_val = -1;
   bool equal_cond = false;
 
-  err = bt.open(table +".idx", 'r');
+  rc = btree.open(table +".idx", 'r');
 
-  if (err == 0){
+  if (rc == 0){
     for (unsigned i = 0; i < cond.size(); i++) {
       SelCond cur_cond = cond[i];
-      if (cond[i] == 1 && !equal_cond) {
+      if (cur_cond.attr == 1 && !equal_cond) {
         switch (cur_cond.comp) {
           case SelCond::EQ:
-          case SelCond::NE:
+            max = atoi(cur_cond.value);
+            min = max;
+            equal_cond = true;
+            break;
           case SelCond::LT:
             if (max == -1) {
               max = atoi(cur_cond.value) - 1;
@@ -79,7 +83,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
             else {
               int temp = atoi(cur_cond.value) -1;
               if (temp < max)
-                max = tmp;
+                max = temp;
             }
             break;
           case SelCond::GT:
@@ -99,7 +103,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
             else {
               int temp = atoi(cur_cond.value);
               if (temp < max)
-                max = tmp;
+                max = temp;
             }
             break;
           case SelCond::GE:
@@ -112,8 +116,86 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
                 max = temp;
             }
             break;
+        };
+      }
+    }
+
+    btree.locate(min, ic);
+
+    while (btree.readForward(ic, key, rid) == 0){
+      // SELECT (*) case
+      if (attr == 4) {
+        if (max != -1 && key > max)
+          goto btree_early_end;
+        if (min != -1 && key < min)
+          goto btree_early_end;
+        if (equal_cond && key != min)
+          goto btree_early_end;
+        count++;
+        goto check_next_tuple; //can this be replaced by a continue?
+      }
+
+      rc = rf.read(rid, key, value);
+      if (rc != 0) {
+        fprintf(stderr, "Error: when reading a tuple from table %s\n", table.c_str());
+        goto exit_select;
+      }
+
+      for (unsigned i = 0; i < cond.size(); i++) {
+        SelCond cur_cond = cond[i];
+        if (cur_cond.attr == 1) 
+          diff = key - atoi(cur_cond.value);
+        if (cur_cond.attr == 1)
+          diff = strcmp(value.c_str(), cur_cond.value); 
+
+        switch(cur_cond.comp) {
+          case SelCond::GE:
+            if (diff < 0)
+              goto check_next_tuple;
+            break;
+          case SelCond::LE:
+            if (diff > 0)
+              if (cur_cond.attr == 1)
+                  goto btree_early_end;
+              goto check_next_tuple;
+            break;
+          case SelCond::LT:
+            if (diff >=0)
+              if (cur_cond.attr != 1)
+                goto btree_early_end;
+              goto next_tuple;
+            break;
+          case SelCond::GT:
+            if (diff <= 0)
+              goto check_next_tuple;
+            break;
+          case SelCond::NE:
+            if (diff == 0) 
+              goto check_next_tuple;
+            break;
+          case SelCond::EQ:
+            if (diff != 0) {
+              if (cur_cond.attr != 1)
+                goto btree_early_end;
+              goto next_tuple;
+            } 
+            break;
         }
       }
+
+      switch (attr) {
+      case 1:  // SELECT key
+        fprintf(stdout, "%d\n", key);
+        break;
+      case 2:  // SELECT value
+        fprintf(stdout, "%s\n", value.c_str());
+        break;
+      case 3:  // SELECT *
+        fprintf(stdout, "%d '%s'\n", key, value.c_str());
+        break;
+      };
+      check_next_tuple:
+      ;
     }
   }
   else {
@@ -182,7 +264,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
     }
   }
 
-
+  btree_early_end:
   // print matching tuple count if "select count(*)"
   if (attr == 4) {
     fprintf(stdout, "%d\n", count);
@@ -203,8 +285,6 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
   RC err;
   BTreeIndex btree;
 
-  string value;
-
 
 
   ifstream infile(loadfile.c_str());
@@ -216,7 +296,7 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
     return err;
 
   if (index) {
-    err = btree.open(table + ".idx", "w");
+    err = btree.open(table + ".idx", 'w');
     if (err != 0)
       return err;
   }
@@ -233,7 +313,7 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
       err = rf.append(key, value, id);
 
       if (err != 0)
-        return err;]
+        return err;
       if (index) {
         err = btree.insert(key,rid);
         if (err != 0){
@@ -254,7 +334,7 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
       return err;
 
   }
-  file.close();
+  infile.close();
   rf.close();
 
   return 0;
