@@ -134,9 +134,29 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 
 RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 {
+
+  RecordFile rf;
+  RecordId rid;
+  RC err;
+  BTreeIndex btree;
+
+  string value;
+
+
+
   ifstream infile(loadfile.c_str());
 
-  RecordFile rf = RecordFile(table + ".tbl", 'w');
+  // RecordFile rf = RecordFile(table + ".tbl", 'w');
+  err = rf.open(table + ".tbl", 'w');
+
+  if (err != 0)
+    return err;
+
+  if (index) {
+    err = btree.open(table + ".idx", "w");
+    if (err != 0)
+      return err;
+  }
 
   int key;
   string value;
@@ -147,7 +167,16 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
       parseLoadLine(line, key, value);
 
       RecordId id = rf.endRid();
-      rf.append(key, value, id);
+      err = rf.append(key, value, id);
+
+      if (err != 0)
+        return err;]
+      if (index) {
+        err = btree.insert(key,rid);
+        if (err != 0){
+          return err;
+        }
+      }
 
       // Prints out stored results
       int i;
@@ -155,6 +184,15 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
       rf.read(id, i, s);
       cout << "key: " << i << " | " << "value: " << s << endl;
   }
+
+  if (index) {
+    err = btree.close();
+    if (err != 0) 
+      return err;
+
+  }
+  file.close();
+  rf.close();
 
   return 0;
 }
