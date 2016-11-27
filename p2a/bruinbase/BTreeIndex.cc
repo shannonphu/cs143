@@ -374,11 +374,10 @@ RC BTreeIndex::readForward(IndexCursor& cursor, int& key, RecordId& rid)
 
 	//Try to move up the cursor up by one 
 	if (cursor.eid + 1 >= blnode.getKeyCount()) {
-		//Move to the next leaf node since we no longer have entries to search for 
-		cursor.pid = blnode.getNextNodePtr();
-
 		// Start over on the entry number count since we move onto the next leaf node
 		cursor.eid = 0; 
+		//Move to the next leaf node since we no longer have entries to search for 
+		cursor.pid = blnode.getNextNodePtr();
 	} else {
 		cursor.eid++;
 	}

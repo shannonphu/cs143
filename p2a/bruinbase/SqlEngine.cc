@@ -129,14 +129,16 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 								max = temp;
 						}
 						break;
-				};
+				}
 			}
 		}
 
 		btree.locate(min, ic);
+    int count2 = 0;
 
 		while (btree.readForward(ic, key, rid) == 0)
 		{
+      count2++;
 			// SELECT (*) case
 			if (attr == 4) {
 				if (max != -1 && key > max)
@@ -159,7 +161,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 				SelCond cur_cond = cond[i];
 				if (cur_cond.attr == 1) 
 					diff = key - atoi(cur_cond.value);
-				if (cur_cond.attr == 1)
+				if (cur_cond.attr == 2)
 					diff = strcmp(value.c_str(), cur_cond.value); 
 
 				switch(cur_cond.comp) {
@@ -170,13 +172,13 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 					case SelCond::LE:
 						if (diff > 0)
 							if (cur_cond.attr == 1)
-									goto btree_early_end;
+									goto exit_select;
 							goto check_next_tuple;
 						break;
 					case SelCond::LT:
 						if (diff >=0)
-							if (cur_cond.attr != 1)
-								goto btree_early_end;
+							if (cur_cond.attr == 1)
+								goto exit_select;
 							goto next_tuple;
 						break;
 					case SelCond::GT:
@@ -189,8 +191,8 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 						break;
 					case SelCond::EQ:
 						if (diff != 0) {
-							if (cur_cond.attr != 1)
-								goto btree_early_end;
+							if (cur_cond.attr == 1)
+								goto exit_select;
 							goto next_tuple;
 						} 
 						break;
@@ -211,6 +213,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 			check_next_tuple:
 			;
 		}
+    cout << "count2 is:" << count2 << endl;
 	}
 	else {
 		while (rid < rf.endRid()){
@@ -316,8 +319,8 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 	string value;
 	for(string line; getline( infile, line ); )
 	{
-			int key;
-			string value;
+			// int key;
+			// string value;
 			parseLoadLine(line, key, value);
 			// cout << "key: " << key << " | " << "value: " << value << endl;
 
