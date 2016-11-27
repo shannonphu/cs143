@@ -83,7 +83,7 @@ int main()
 	// index.open("btree.tbl", 'w');
 	// rid.pid = 5;
 	// rid.sid = 6;
-	// int num = 5419;
+	// int num = 3000;
 	// // int num = 5419 * 128;
 	// for (int i = 1; i < num; i++){
 	// 	rid.pid = i;
@@ -113,7 +113,7 @@ int main()
 	// index.close();
 
 	// run the SQL engine taking user commands from standard input (console).
-	// SqlEngine::run(stdin);
+	SqlEngine::run(stdin);
 
 	return 0;
 }

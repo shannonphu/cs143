@@ -107,18 +107,19 @@ void BTreeIndex::traverse()
 		{
 			PageId pid;
 			memcpy(&pid, root.buffer + i * 8, sizeof(PageId));
-			cout << "nonleaf " << i << " in page id " << pid << endl;
-			BTNonLeafNode node;
+			// cout << "nonleaf " << i << " in page id " << pid << endl;
+			BTLeafNode node;
 			node.read(pid, pf);
+			node.print();
 
-			for (int j = 0; j < node.getKeyCount(); ++j)
-			{
-				memcpy(&pid, node.buffer + j * 8, sizeof(PageId));
-				BTLeafNode nodel;
-				cout << "lower level nonleaf " << j << " with pid " << pid << endl;
-				nodel.read(pid, pf);
-				nodel.print();
-			}
+			// for (int j = 0; j < node.getKeyCount(); ++j)
+			// {
+			// 	memcpy(&pid, node.buffer + j * 8, sizeof(PageId));
+			// 	BTLeafNode nodel;
+			// 	// cout << "lower level nonleaf " << j << " with pid " << pid << endl;
+			// 	nodel.read(pid, pf);
+			// 	nodel.print();
+			// }
 		}
 
 		// if only height 2
@@ -169,7 +170,7 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 
 		treeHeight = 1;
 		rootPid = pf.endPid();
-		cout << "first node: " << rootPid << endl;
+		// cout << "first node: " << rootPid << endl;
 		RC err = leaf.write(rootPid, pf);
 		if (err != 0)
 		{
@@ -191,7 +192,7 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 		newRoot.initializeRoot(rootPid, movedKey, movedPid);
 		treeHeight++;
 		rootPid = pf.endPid();
-		cout << "new root: " << rootPid << endl;
+		// cout << "new root: " << rootPid << endl;
 		newRoot.write(rootPid, pf);
 	}
 
@@ -318,7 +319,7 @@ RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
 
 	// get to the leaf height in order to locate the appropriate node
 	for (int i = 1; i < treeHeight; i++ ) {
-		cout << "Height not there yet" << endl;
+		// cout << "Height not there yet" << endl;
 		err = nblnode.read(pid, pf);
 		if (err != 0)
 			return err;
@@ -327,7 +328,7 @@ RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
 		if (err != 0)
 			return err;
 	}
-	cout << "no internal leaf nodes" << endl;
+
 	BTLeafNode blnode;
 
 	err = blnode.read(pid, pf);

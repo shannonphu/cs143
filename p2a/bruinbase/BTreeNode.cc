@@ -461,7 +461,7 @@ RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
 
 	 	// Found position in middle of non-leaf
 	 	if (currKey > searchKey) {
-	 		cout << "Found the key yay:" << searchKey << endl;
+	 		// cout << "Found the key yay:" << searchKey << endl;
 	 		memcpy(&pid, buffer + i - sizeof(PageId), sizeof(PageId));
 	 		return 0;
 	 	}
