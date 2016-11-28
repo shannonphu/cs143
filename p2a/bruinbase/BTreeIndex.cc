@@ -14,6 +14,8 @@
 
 using namespace std;
 
+#define PAIR_SIZE_L (sizeof(RecordId) + sizeof(int))
+#define MAX_KEYS_L floor((PageFile::PAGE_SIZE - sizeof(PageId) / PAIR_SIZE_L))
 #define PAIR_SIZE_NL (sizeof(int) + sizeof(PageId))
 #define MAX_KEYS_NL floor((PageFile::PAGE_SIZE - sizeof(PageId) - sizeof(int)) / PAIR_SIZE_NL)
 
@@ -201,7 +203,7 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 }
 
 // Recursive insertion helper
-RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHeight, int &movedKey, PageId &movedPid)
+RC BTreeIndex::insertHelper(int key, const RecordId &rid, PageId &currNode, int currHeight, int &movedKey, PageId &movedPid)
 {
 	//cout << "Inside insert helper with key:" << key << endl;
 	// Reached leaf level
@@ -212,14 +214,22 @@ RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHei
 		leaf.read(currNode, pf);
 		//cout << "read successful at key:" << key << endl;
 		// Check for successful insertion
-		if (leaf.insert(key, rid) == 0)
-		{
+		// if (leaf.insert(key, rid) == 0)
+		// {
+		// 	leaf.write(currNode, pf);
+		// 	return 0;
+		// }
+
+		if (leaf.getKeyCount() < MAX_KEYS_L ) {
+			leaf.insert(key,rid);
 			leaf.write(currNode, pf);
 			return 0;
 		}
 
 		// Deal with overflow
 		BTLeafNode sibling;
+		// added 
+		leaf.insertAndSplit(key, rid, sibling, movedKey);
 		movedPid = pf.endPid();
 		cout << "movedPid: " << movedPid << endl;
 		// Connect leaf next pointers
@@ -227,7 +237,7 @@ RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHei
 		// sibling.setNextNodePtr(leafNextNode);
 		leaf.setNextNodePtr(movedPid);
 		cout << "leaf NextNodePtr: " << leaf.getNextNodePtr() << endl;
-				leaf.insertAndSplit(key, rid, sibling, movedKey);
+				// leaf.insertAndSplit(key, rid, sibling, movedKey);
 
 		// Write leaves back to page file
 		leaf.write(currNode, pf);
@@ -365,7 +375,7 @@ RC BTreeIndex::readForward(IndexCursor& cursor, int& key, RecordId& rid)
 		return RC_NO_SUCH_RECORD;
 
 	RC err = blnode.read(cursor.pid, pf);
-	blnode.print();
+	// blnode.print();
 	cout << blnode.getNextNodePtr() << endl;
 
 	if (err != 0) 

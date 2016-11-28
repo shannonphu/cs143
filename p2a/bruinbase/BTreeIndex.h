@@ -101,7 +101,7 @@ class BTreeIndex {
   /// variables in disk, so that they can be reconstructed when the index
   /// is opened again later.
 
-  RC insertHelper(int key, RecordId rid, PageId &currNode, int currHeight, int &movedKey, PageId &movedPid);
+  RC insertHelper(int key, const RecordId &rid, PageId &currNode, int currHeight, int &movedKey, PageId &movedPid);
   char buffer[PageFile::PAGE_SIZE];
 };
 

@@ -347,7 +347,7 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 	}
 
 	if (index) {
-		btree.traverse();
+		// btree.traverse();
 		err = btree.close();
 		if (err != 0) 
 			return err;
