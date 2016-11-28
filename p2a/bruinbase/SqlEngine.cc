@@ -75,7 +75,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 			SelCond cur_cond = cond[i];
 			if (cur_cond.attr == 1 && !equal_cond) 
 			{
-				switch (cur_cond.comp) 
+				switch (cur_cond.comp)
 				{
 					case SelCond::EQ:
 						max = atoi(cur_cond.value);
@@ -130,6 +130,8 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 								max = temp;
 						}
 						break;
+					case SelCond::NE:
+						break;
 				}
 			}
 		}
@@ -146,7 +148,6 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 				if (equal_cond && key != min)
 					goto btree_early_end;
 				count++;
-				// cout << "check_next_tuple goto hit" << endl;
 				goto check_next_tuple; //can this be replaced by a continue?
 			}
 
@@ -171,14 +172,13 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 					case SelCond::LE:
 						if (diff > 0)
 							if (cur_cond.attr == 1)
-									goto exit_select;
-							goto check_next_tuple;
+								goto exit_select;
+							// goto check_next_tuple;
 						break;
 					case SelCond::LT:
 						if (diff >=0)
 							if (cur_cond.attr == 1)
 								goto exit_select;
-							goto next_tuple;
 						break;
 					case SelCond::GT:
 						if (diff <= 0)
@@ -192,7 +192,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 						if (diff != 0) {
 							if (cur_cond.attr == 1)
 								goto exit_select;
-							goto next_tuple;
+							goto check_next_tuple;
 						} 
 						break;
 				}
