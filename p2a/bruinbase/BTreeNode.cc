@@ -160,7 +160,6 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
 
 	memcpy(sibling.buffer, buffer + midptAddr, rightSideEntries * PAIR_SIZE);
 	sibling.setNextNodePtr(getNextNodePtr());
-	cout << "sibling nextnode ptr: " << sibling.getNextNodePtr() << endl;
 	sibling.numKeys = rightSideEntries;
 
 	memset(buffer + midptAddr, 0, PageFile::PAGE_SIZE - midptAddr - sizeof(PageId));

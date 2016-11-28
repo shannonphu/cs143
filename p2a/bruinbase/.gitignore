@@ -1,0 +1,6 @@
+SqlParser.tab.c
+SqlParser.tab.h
+lex.sql.c
+*.tbl
+*.idx
+*.del

@@ -133,14 +133,10 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 			}
 		}
 
-		cout << "min " << min << endl;
 		btree.locate(min, ic);
-	    int count2 = 0;
-
+		int count2 = 0;
 		while (btree.readForward(ic, key, rid) == 0)
 		{
-			cout << "ic.pid: " << ic.pid << " ic.eid: " << ic.eid << endl;
-			count2++;
 			// SELECT (*) case
 			if (attr == 4) {
 				if (max != -1 && key > max)
@@ -213,10 +209,11 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 				fprintf(stdout, "%d '%s'\n", key, value.c_str());
 				break;
 			};
+			cout << count2 << endl;
+			count2++;
 			check_next_tuple:
 			;
 		}
-    cout << "count2 is:" << count2 << endl;
 	}
 	else {
 		while (rid < rf.endRid()){
@@ -347,7 +344,7 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 	}
 
 	if (index) {
-		// btree.traverse();
+		btree.traverse();
 		err = btree.close();
 		if (err != 0) 
 			return err;
