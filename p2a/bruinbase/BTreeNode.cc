@@ -63,7 +63,7 @@ int BTLeafNode::getKeyCount()
 	int count = 0;
 	char* temp = buffer;
 	int i;
-	for (i = 0; i<=1008; i+= PAIR_SIZE){
+	for (i = 0; i<=LAST_ENTRY_ADDR; i+= PAIR_SIZE){
 		int insideKey;
 		memcpy(&insideKey, temp, sizeof(int));
 		if (insideKey == 0)
@@ -120,6 +120,9 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
 	char *temp = (char *)malloc(PageFile::PAGE_SIZE);
 	insertIntoTempBuffer(temp, addressToInsert, PageFile::PAGE_SIZE, key, rid);
 	memcpy(buffer, temp, PageFile::PAGE_SIZE);
+	PageId nextNodePtr = getNextNodePtr();
+	setNextNodePtr(nextNodePtr);
+	// cout << "next node ptr: " << getNextNodePtr() << endl;
 
 	// debug cout
 	// int kk;
@@ -153,19 +156,27 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
 	int midptAddr = leftSideEntries * PAIR_SIZE;
 	int rightSideEntries = getKeyCount() - leftSideEntries;
 
+	memset(sibling.buffer, 0, PageFile::PAGE_SIZE);
+
 	memcpy(sibling.buffer, buffer + midptAddr, rightSideEntries * PAIR_SIZE);
 	sibling.setNextNodePtr(getNextNodePtr());
+	cout << "sibling nextnode ptr: " << sibling.getNextNodePtr() << endl;
 	sibling.numKeys = rightSideEntries;
 
 	memset(buffer + midptAddr, 0, PageFile::PAGE_SIZE - midptAddr - sizeof(PageId));
 	numKeys = leftSideEntries;
 
-	memcpy(&siblingKey, sibling.buffer, sizeof(int));
-
+	// memcpy(&siblingKey, sibling.buffer, sizeof(int));
+		// check which side to add the new entry
+	int sib_first;
+	memcpy(&sib_first, sibling.buffer + sizeof(int), sizeof(int));
+	siblingKey = sib_first;
 	if (key < siblingKey)
 		insert(key, rid);
 	else
 		sibling.insert(key, rid);
+	
+	memcpy(&siblingKey, sibling.buffer, sizeof(int));
 
 	return 0; 
 }

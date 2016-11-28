@@ -133,12 +133,14 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 			}
 		}
 
+		cout << "min " << min << endl;
 		btree.locate(min, ic);
-    int count2 = 0;
+	    int count2 = 0;
 
 		while (btree.readForward(ic, key, rid) == 0)
 		{
-      count2++;
+			cout << "ic.pid: " << ic.pid << " ic.eid: " << ic.eid << endl;
+			count2++;
 			// SELECT (*) case
 			if (attr == 4) {
 				if (max != -1 && key > max)
@@ -148,6 +150,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 				if (equal_cond && key != min)
 					goto btree_early_end;
 				count++;
+				// cout << "check_next_tuple goto hit" << endl;
 				goto check_next_tuple; //can this be replaced by a continue?
 			}
 

@@ -111,6 +111,7 @@ void BTreeIndex::traverse()
 			BTLeafNode node;
 			node.read(pid, pf);
 			node.print();
+			cout << "NextNodePtr: " << node.getNextNodePtr() << endl;
 
 			// for (int j = 0; j < node.getKeyCount(); ++j)
 			// {
@@ -219,13 +220,14 @@ RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHei
 
 		// Deal with overflow
 		BTLeafNode sibling;
-		leaf.insertAndSplit(key, rid, sibling, movedKey);
 		movedPid = pf.endPid();
-
+		cout << "movedPid: " << movedPid << endl;
 		// Connect leaf next pointers
 		// int leafNextNode = leaf.getNextNodePtr();
 		// sibling.setNextNodePtr(leafNextNode);
 		leaf.setNextNodePtr(movedPid);
+		cout << "leaf NextNodePtr: " << leaf.getNextNodePtr() << endl;
+				leaf.insertAndSplit(key, rid, sibling, movedKey);
 
 		// Write leaves back to page file
 		leaf.write(currNode, pf);
@@ -363,6 +365,8 @@ RC BTreeIndex::readForward(IndexCursor& cursor, int& key, RecordId& rid)
 		return RC_NO_SUCH_RECORD;
 
 	RC err = blnode.read(cursor.pid, pf);
+	blnode.print();
+	cout << blnode.getNextNodePtr() << endl;
 
 	if (err != 0) 
 		return err;
@@ -370,7 +374,10 @@ RC BTreeIndex::readForward(IndexCursor& cursor, int& key, RecordId& rid)
 	err = blnode.readEntry(cursor.eid, key, rid);
 
 	if (err != 0) 
+	{
+		cout << "readForward found error in reading entry" << endl;
 		return err;
+	}
 
 	//Try to move up the cursor up by one 
 	if (cursor.eid + 1 >= blnode.getKeyCount()) {

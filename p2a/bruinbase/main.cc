@@ -53,7 +53,7 @@ int main()
 	// node_l.insertAndSplit(1, rid, node_l2, midkey);
 	// assert(node_l.getKeyCount() == 43);
 	// assert(node_l2.getKeyCount() == 42);
-	// assert(midkey == 43);
+	// cout << node_l.getNextNodePtr() << endl;
 
 	// // cout << "First leaf" << endl;
 	// // node_l.print();
