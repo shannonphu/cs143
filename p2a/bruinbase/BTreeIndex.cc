@@ -15,7 +15,7 @@
 using namespace std;
 
 #define PAIR_SIZE_L (sizeof(RecordId) + sizeof(int))
-#define MAX_KEYS_L floor((PageFile::PAGE_SIZE - sizeof(PageId) / PAIR_SIZE_L))
+#define MAX_KEYS_L floor((PageFile::PAGE_SIZE - sizeof(PageId)) / PAIR_SIZE_L)
 #define PAIR_SIZE_NL (sizeof(int) + sizeof(PageId))
 #define MAX_KEYS_NL floor((PageFile::PAGE_SIZE - sizeof(PageId) - sizeof(int)) / PAIR_SIZE_NL)
 
@@ -172,7 +172,11 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 		}
 
 		treeHeight = 1;
-		rootPid = pf.endPid();
+		// rootPid = pf.endPid();
+		if (pf.endPid() == 0)
+			rootPid = 1;
+		else
+			rootPid = pf.endPid();
 		// cout << "first node: " << rootPid << endl;
 		RC err = leaf.write(rootPid, pf);
 		if (err != 0)
@@ -203,7 +207,7 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 }
 
 // Recursive insertion helper
-RC BTreeIndex::insertHelper(int key, const RecordId &rid, PageId &currNode, int currHeight, int &movedKey, PageId &movedPid)
+RC BTreeIndex::insertHelper(int key, RecordId rid, PageId &currNode, int currHeight, int &movedKey, PageId &movedPid)
 {
 	//cout << "Inside insert helper with key:" << key << endl;
 	// Reached leaf level
@@ -214,17 +218,17 @@ RC BTreeIndex::insertHelper(int key, const RecordId &rid, PageId &currNode, int 
 		leaf.read(currNode, pf);
 		//cout << "read successful at key:" << key << endl;
 		// Check for successful insertion
-		// if (leaf.insert(key, rid) == 0)
-		// {
-		// 	leaf.write(currNode, pf);
-		// 	return 0;
-		// }
-
-		if (leaf.getKeyCount() < MAX_KEYS_L ) {
-			leaf.insert(key,rid);
+		if (leaf.insert(key, rid) == 0)
+		{
 			leaf.write(currNode, pf);
 			return 0;
 		}
+
+		// if (leaf.getKeyCount() < MAX_KEYS_L ) {
+		// 	leaf.insert(key,rid);
+		// 	leaf.write(currNode, pf);
+		// 	return 0;
+		// }
 
 		// Deal with overflow
 		BTLeafNode sibling;
@@ -232,9 +236,10 @@ RC BTreeIndex::insertHelper(int key, const RecordId &rid, PageId &currNode, int 
 		leaf.insertAndSplit(key, rid, sibling, movedKey);
 		movedPid = pf.endPid();
 		// Connect leaf next pointers
-		// int leafNextNode = leaf.getNextNodePtr();
-		// sibling.setNextNodePtr(leafNextNode);
+		int leafNextNode = leaf.getNextNodePtr();
+		sibling.setNextNodePtr(leafNextNode);
 		leaf.setNextNodePtr(movedPid);
+
 		// leaf.insertAndSplit(key, rid, sibling, movedKey);
 
 		// Write leaves back to page file

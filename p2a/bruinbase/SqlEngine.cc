@@ -65,6 +65,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 	bool equal_cond = false;
 
 	rc = btree.open(table + ".idx", 'r');
+	int count2 = 0;
 
 	// Use index file if exists
 	if (rc == 0)
@@ -134,7 +135,6 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 		}
 
 		btree.locate(min, ic);
-		int count2 = 0;
 		while (btree.readForward(ic, key, rid) == 0)
 		{
 			// SELECT (*) case
@@ -209,7 +209,6 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 				fprintf(stdout, "%d '%s'\n", key, value.c_str());
 				break;
 			};
-			cout << count2 << endl;
 			count2++;
 			check_next_tuple:
 			;
@@ -274,6 +273,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 						fprintf(stdout, "%d '%s'\n", key, value.c_str());
 						break;
 					}
+					count2++;
 
 					// move to the next tuple
 					next_tuple:
@@ -344,7 +344,6 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 	}
 
 	if (index) {
-		btree.traverse();
 		err = btree.close();
 		if (err != 0) 
 			return err;

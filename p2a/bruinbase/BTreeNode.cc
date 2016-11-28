@@ -115,14 +115,14 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
 	if (getKeyCount() >= MAX_KEYS)
 		return RC_NODE_FULL;
 
+	PageId nextNodePtr = getNextNodePtr();
+
 	int addressToInsert = getInsertAddress(key);
 
 	char *temp = (char *)malloc(PageFile::PAGE_SIZE);
 	insertIntoTempBuffer(temp, addressToInsert, PageFile::PAGE_SIZE, key, rid);
 	memcpy(buffer, temp, PageFile::PAGE_SIZE);
-	PageId nextNodePtr = getNextNodePtr();
 	setNextNodePtr(nextNodePtr);
-	// cout << "next node ptr: " << getNextNodePtr() << endl;
 
 	// debug cout
 	// int kk;
@@ -168,7 +168,7 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
 	// memcpy(&siblingKey, sibling.buffer, sizeof(int));
 		// check which side to add the new entry
 	int sib_first;
-	memcpy(&sib_first, sibling.buffer + sizeof(int), sizeof(int));
+	memcpy(&sib_first, sibling.buffer, sizeof(int));
 	siblingKey = sib_first;
 	if (key < siblingKey)
 		insert(key, rid);
